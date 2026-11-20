@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Van's Piano">
+<title>Van's Piano · 钢琴课</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:wght@600;800&family=Noto+Music&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --ink:#17202B; --muted:#586375; --line:#D3D9E1;
+  --accent:#2747B8; --accent-ink:#FFFFFF; --soft:#E2E8F7;
+  --mark:#F2B135; --good:#1E8A5A; --bad:#C23B2E;
+  --key-white:#FBFBF8; --key-black:#1C1F25; --key-edge:#B9C0CA;
+  --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",-apple-system,system-ui,sans-serif;
+  --music:"Noto Music","Apple Symbols",serif;
+  /* layout: one reading column (~66ch) with full-width practice cards; each card carries its own keyboard */
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11151B; --surface:#1A2029; --ink:#E6EAF0; --muted:#9AA5B5; --line:#2D3644;
+    --accent:#8DA3FF; --accent-ink:#0E1424; --soft:#232C40;
+    --mark:#F4BE4F; --good:#47C08A; --bad:#F07A6D;
+    --key-white:#F1F1EC; --key-black:#0A0C0F; --key-edge:#5B6473;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11151B; --surface:#1A2029; --ink:#E6EAF0; --muted:#9AA5B5; --line:#2D3644;
+  --accent:#8DA3FF; --accent-ink:#0E1424; --soft:#232C40;
+  --mark:#F4BE4F; --good:#47C08A; --bad:#F07A6D;
+  --key-white:#F1F1EC; --key-black:#0A0C0F; --key-edge:#5B6473;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.55;touch-action:manipulation;-webkit-text-size-adjust:100%}
+a{color:var(--accent)}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:34px;font-weight:800;letter-spacing:-.01em}
+h2{font-size:24px;font-weight:800}
+h3{font-size:19px;font-weight:600}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top) + 10px) max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left))}
+.top-in{max-width:1040px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.brand{font-family:var(--display);font-weight:800;font-size:21px;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:8px}
+.brand svg{flex:none}
+.spacer{flex:1}
+.nav.row{flex-wrap:nowrap;gap:2px}
+.nav a{white-space:nowrap;font-weight:700;text-decoration:none;padding:8px 12px;border-radius:999px;color:var(--ink)}
+.nav a.on{background:var(--soft);color:var(--accent)}
+.who{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px 6px 6px;font-weight:700;min-height:44px}
+.dot{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;flex:none}
+
+main{max-width:1040px;margin:0 auto;padding:24px max(16px,env(safe-area-inset-left)) calc(60px + env(safe-area-inset-bottom))}
+.col{max-width:700px}
+.stack{display:flex;flex-direction:column;gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+.muted{color:var(--muted)}
+.small{font-size:15px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 16px;font-weight:700;min-height:46px;display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.quiet{background:transparent}
+.btn:disabled{opacity:.45;cursor:default}
+.btn svg{flex:none}
+.stack>.chip{align-self:flex-start}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--soft);color:var(--accent)}
+.chip.opt{background:transparent;border:1px dashed var(--line);color:var(--muted)}
+.chip.done{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+
+.status{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px;margin-top:6px}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.status.ok i{background:var(--good)}
+.status.warn i{background:var(--mark)}
+
+/* home */
+.hero{display:grid;gap:18px;grid-template-columns:1fr auto;align-items:end}
+@media (max-width:640px){.hero{grid-template-columns:1fr}}
+.bar{height:10px;border-radius:99px;background:var(--soft);overflow:hidden}
+.bar>span{display:block;height:100%;background:var(--accent);border-radius:99px}
+.unit h3{margin:6px 0 10px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-family:var(--body);font-weight:700}
+.lessons{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.lrow{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);text-decoration:none;color:var(--ink);min-height:72px}
+.lrow .num{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;border:2px solid var(--line);font-variant-numeric:tabular-nums;font-size:15px}
+.lrow.done .num{background:var(--good);border-color:var(--good);color:#fff}
+.lrow.next{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 25%,transparent)}
+.lrow.next .num{border-color:var(--accent);color:var(--accent)}
+.lrow .t,.lrow .s{display:block}
+.lrow .t{font-weight:700;line-height:1.25}
+.lrow .s{font-size:14px;color:var(--muted);line-height:1.35;margin-top:2px}
+.pace{display:grid;gap:12px}
+.pace .p{display:grid;grid-template-columns:30px 110px 1fr 70px;gap:10px;align-items:center}
+.pace .p b{font-variant-numeric:tabular-nums;text-align:right}
+.pickers{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.pick{display:flex;gap:14px;align-items:center;padding:18px;border-radius:16px;border:1px solid var(--line);background:var(--surface);text-align:left;width:100%}
+.pick .dot{width:48px;height:48px;font-size:21px}
+.pick b{display:block;font-size:20px}
+
+/* lesson */
+.lhead .kicker{font-size:15px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.lesson p{margin:0;max-width:66ch}
+.lesson .lead{font-size:20px}
+.tip{border-left:4px solid var(--mark);background:color-mix(in srgb,var(--mark) 12%,var(--surface));padding:12px 16px;border-radius:0 12px 12px 0;max-width:66ch}
+.tip b:first-child{display:block;font-size:14px;letter-spacing:.05em;text-transform:uppercase}
+.track-note{border-left:4px solid var(--accent);background:var(--soft);padding:12px 16px;border-radius:0 12px 12px 0;max-width:66ch}
+.track-note .who-for{display:block;font-size:14px;font-weight:700;color:var(--accent);letter-spacing:.04em;text-transform:uppercase}
+.cap{font-size:15px;color:var(--muted);margin-top:8px}
+.endbar{display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:18px;margin-top:8px}
+
+/* keyboard */
+.kbwrap{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:4px 0 8px;scrollbar-width:thin}
+.kb{position:relative;height:var(--kh,170px);width:calc(var(--wk,44px) * var(--nw));margin:0 auto;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-x}
+.key{position:absolute;top:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;-webkit-tap-highlight-color:transparent}
+.key.white{width:var(--wk);height:100%;background:var(--key-white);border:1px solid var(--key-edge);border-top:none;border-radius:0 0 8px 8px;z-index:1;padding-bottom:8px;box-shadow:inset 0 -6px 0 rgba(0,0,0,.06)}
+.key.black{width:var(--bw);height:62%;background:var(--key-black);border-radius:0 0 6px 6px;z-index:2;padding-bottom:6px;box-shadow:inset 0 -5px 0 rgba(255,255,255,.1)}
+.key .lb{font-weight:700;font-size:clamp(12px,calc(var(--wk) * .34),18px);color:#2A3140;pointer-events:none}
+.key.black .lb{color:#E9ECF2;font-size:clamp(9px,calc(var(--wk) * .24),13px)}
+.kb:not(.nolabels) .key.mid .lb::after{content:"";display:block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin:3px auto 0}
+.key .fg{position:absolute;top:28%;width:clamp(20px,calc(var(--wk) * .62),32px);height:clamp(20px,calc(var(--wk) * .62),32px);border-radius:50%;display:none;place-items:center;font-weight:800;font-size:clamp(12px,calc(var(--wk) * .34),17px);background:var(--ink);color:var(--bg);pointer-events:none}
+.key.black .fg{top:20%;width:clamp(16px,calc(var(--wk) * .48),26px);height:clamp(16px,calc(var(--wk) * .48),26px);background:#fff;color:#111}
+.key.hasfg .fg{display:grid}
+.key.ga{background:#CFE0FF}.key.black.ga{background:#3D63D8}
+.key.gb{background:#FFE2B8}.key.black.gb{background:#C46A12}
+.key.target{background:var(--mark)!important}
+.key.black.target{background:#D99A1B!important}
+.key.play{background:#9DB3FF!important}
+.key.black.play{background:#3557C9!important}
+.key.down{filter:brightness(.88)}
+.key.good{background:#8EE0B5!important}
+.key.bad{background:#F6A39A!important}
+.kbtools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+
+/* practice card */
+.prac{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.prac .ph{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
+.prac .ph h3{font-size:20px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{border:none;background:transparent;padding:9px 14px;font-weight:700;min-height:44px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.tempo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px}
+.tempo input{width:150px;accent-color:var(--accent)}
+.tempo output{font-variant-numeric:tabular-nums;min-width:66px}
+.tog{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:700;min-height:44px}
+.tog input{width:22px;height:22px;accent-color:var(--accent)}
+.pstat{min-height:28px;font-weight:700}
+.pstat.good{color:var(--good)}.pstat.bad{color:var(--bad)}
+.staffbox{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px;background:var(--key-white);padding:4px 0}
+svg.staff{display:block}
+svg.staff .ln{stroke:#4A5262;stroke-width:1}
+svg.staff .bl{stroke:#4A5262;stroke-width:1.2}
+svg.staff .bl2{stroke:#20242C;stroke-width:3.5}
+svg.staff .clef{font-family:var(--music);fill:#20242C}
+svg.staff .ts{font-family:var(--display);font-weight:800;fill:#20242C;font-size:20px}
+svg.staff .hd{fill:#20242C;stroke:#20242C;stroke-width:1.4}
+svg.staff .hd.hollow{fill:#FBFBF8}
+svg.staff .stem,svg.staff .flag,svg.staff .led{stroke:#20242C;stroke-width:1.4;fill:none}
+svg.staff .dt{fill:#20242C}
+svg.staff .rest{fill:#20242C}
+svg.staff .rest-ln{stroke:#20242C;stroke-width:1.6;fill:none}
+svg.staff .tie{stroke:#20242C;stroke-width:1.4;fill:none}
+svg.staff .acc{font-family:var(--music);font-size:22px;fill:#20242C}
+svg.staff .nm{font-family:var(--body);font-weight:700;font-size:13px;fill:#2747B8;text-anchor:middle}
+svg.staff .fgn{font-family:var(--body);font-weight:700;font-size:12px;fill:#6A7383;text-anchor:middle}
+svg.staff .tag{}
+.zh{font-weight:600;color:var(--muted);font-size:.85em;margin-left:6px}
+svg.staff .tag{font-family:var(--body);font-size:12px;fill:#6A7383}
+svg.staff .nt.now .hd{fill:#2747B8;stroke:#2747B8}
+svg.staff .nt.now .stem,svg.staff .nt.now .flag{stroke:#2747B8}
+svg.staff .nt.tgt .hd{fill:#E09A10;stroke:#E09A10}
+svg.staff .nt.tgt .stem{stroke:#E09A10}
+svg.staff .nt.ok .hd{fill:#1E8A5A;stroke:#1E8A5A}
+svg.staff .nt.no .hd{fill:#C23B2E;stroke:#C23B2E}
+svg.staff .hl{fill:#F2B135;opacity:.28}
+
+/* quizzes */
+.qbig{font-family:var(--display);font-size:30px;font-weight:800;min-height:40px}
+.answers{display:flex;gap:8px;flex-wrap:wrap}
+.answers button{min-width:56px;min-height:56px;font-size:22px;font-weight:800;border-radius:14px;border:1px solid var(--line);background:var(--surface)}
+.answers button.good{background:var(--good);border-color:var(--good);color:#fff}
+.answers button.bad{background:var(--bad);border-color:var(--bad);color:#fff}
+.score{font-variant-numeric:tabular-nums;font-weight:700;color:var(--muted);font-size:15px}
+.pad{width:100%;min-height:150px;border-radius:20px;border:2px solid var(--line);background:var(--soft);font-family:var(--display);font-size:26px;font-weight:800;color:var(--accent);-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.pad.beat{border-color:var(--accent)}
+.pad.hit{background:color-mix(in srgb,var(--accent) 25%,var(--soft))}
+.tl{position:relative;height:56px;border-radius:10px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.tl .ex{position:absolute;top:6px;bottom:6px;width:3px;margin-left:-1.5px;background:var(--muted);border-radius:2px}
+.tl .tp{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%}
+.tl .tp.ok{background:var(--good)}.tl .tp.no{background:var(--bad)}
+.hands{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.hands figure{margin:0;text-align:center}
+.hands figcaption{font-weight:700;font-size:15px;color:var(--muted)}
+.hand-skin{fill:color-mix(in srgb,var(--mark) 22%,var(--surface));stroke:var(--muted);stroke-width:2}
+.hand-on{fill:var(--mark);stroke:var(--ink)}
+.hand-num{font-family:var(--display);font-weight:800;font-size:20px;fill:var(--ink);text-anchor:middle}
+
+/* modal */
+.veil{position:fixed;inset:0;background:rgba(10,14,20,.45);z-index:50;display:grid;place-items:center;padding:16px}
+.sheet{background:var(--surface);border-radius:20px;padding:22px;width:min(520px,100%);max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:16px;border:1px solid var(--line)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field>span{font-weight:700;font-size:15px}
+.field input[type=text]{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg);font-size:18px}
+.choice{display:grid;gap:8px}
+.choice label{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer}
+.choice input{margin-top:5px;width:20px;height:20px;accent-color:var(--accent)}
+.choice label:has(input:checked){border-color:var(--accent);background:var(--soft)}
+.choice small{display:block;color:var(--muted);font-size:14px;line-height:1.4}
+.heard{font-weight:700;font-size:15px;color:var(--accent);display:flex;align-items:center;gap:10px;min-height:24px}
+.meter{width:120px;height:8px;border-radius:99px;background:var(--soft);overflow:hidden;display:inline-block}
+.meter>span{display:block;height:100%;width:0;background:var(--good);border-radius:99px}
+.btn[data-mic][aria-pressed="true"],.btn.mic-on{background:color-mix(in srgb,var(--good) 14%,var(--surface));border-color:var(--good);color:var(--good)}
+.bignote{font-family:var(--display);font-weight:800;font-size:56px;line-height:1;min-width:120px}
+textarea.code{width:100%;min-height:90px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--bg);font:14px/1.4 ui-monospace,Menlo,monospace;color:var(--ink)}
+.jp{overflow-x:auto}.jp table{border-collapse:collapse;font-variant-numeric:tabular-nums}.jp th,.jp td{border:1px solid var(--line);padding:6px 10px;text-align:center}.jp th{text-align:left;font-size:14px;color:var(--muted);white-space:nowrap}.jp td{font-weight:700;min-width:40px}
+.banner{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;font-size:15px}
+@media (max-width:520px){h1{font-size:28px}.top-in{gap:6px}.nav a{padding:7px 7px;font-size:15px}.brand svg{width:26px;height:26px}.who{font-size:15px;padding:4px 10px 4px 4px;min-height:40px;max-width:44vw}.who .dot{width:28px;height:28px}.brand span{display:none}.pace .p{grid-template-columns:30px 80px 1fr 56px}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+/* ---------- van-piano additions ---------- */
+[hidden]{display:none!important}
+.kb:not(.nolabels) .key.mid .lb::after{width:14px;height:3px;border-radius:2px}
+.tip .zhp b{display:inline;font-size:inherit;letter-spacing:0;text-transform:none}
+.nav a .enn{font-weight:600}
+@media (max-width:520px){.nav a .enn{display:none}}
+.gear{border:1px solid var(--line);background:var(--surface);border-radius:999px;width:44px;height:44px;display:grid;place-items:center;flex:none;color:var(--ink)}
+.pp{display:flex;flex-direction:column;gap:4px;max-width:66ch}
+.zhp{color:var(--muted);font-size:16px;line-height:1.6}
+.tip .zhp{display:block;margin-top:4px}
+.lrow .tz{font-weight:600;color:var(--muted);font-size:15px;margin-left:6px}
+.tog select{font:inherit;font-size:15px;padding:6px 8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);min-height:40px}
+.key .lb{display:flex;flex-direction:column;align-items:center;line-height:1.05}
+.key .lb .kd{font-size:11px;line-height:8px;height:8px;letter-spacing:-1px}
+.key .lb small{font-size:.7em}
+/* numbered notation (简谱) */
+.jpbox{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:8px 8px 2px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.jhead{font-weight:700;font-size:15px;color:var(--muted);margin:0 0 6px 2px}
+.jsys{display:flex;flex-direction:column;margin-bottom:12px}
+.jrow{display:flex;align-items:stretch}
+.jtag{flex:none;display:flex;align-items:center;font-size:13px;font-weight:700;color:var(--muted)}
+.jbar{position:relative;display:flex;flex:none;padding:0 4px;border-right:1.5px solid var(--key-edge)}
+.jbar.first{border-left:1.5px solid var(--key-edge)}
+.jbar.end{border-right:4px double var(--muted)}
+.jbar.out{opacity:.3}
+.jbn{position:absolute;left:3px;top:-1px;font-size:10px;color:var(--muted);font-weight:700;font-family:var(--body)}
+.jn{flex:none;display:flex;flex-direction:column;align-items:center;font-family:var(--display);font-weight:800;color:var(--ink);cursor:pointer;border-radius:6px;-webkit-tap-highlight-color:transparent}
+.jo{height:9px;line-height:9px;font-size:9px;letter-spacing:-1px}
+.jv{align-self:stretch;text-align:center;line-height:1.15;padding-bottom:1px;white-space:nowrap}
+.jv.u1{border-bottom:2px solid currentColor}
+.jv.u2{border-bottom:6px double currentColor}
+.jn.gs .jv{margin-left:3px}.jn.ge .jv{margin-right:3px}
+.jv sup{font-size:.55em;vertical-align:top;margin-right:1px}
+.jdot{font-weight:800;margin-left:1px}
+.jn.dash{color:var(--muted)}
+.jn.now{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent)}
+.jn.tgt{background:color-mix(in srgb,var(--mark) 40%,transparent)}
+
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="#home" aria-label="Van's Piano home">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="1" y="4" width="28" height="22" rx="4" fill="var(--ink)"/><rect x="3" y="6" width="5.5" height="18" rx="1" fill="var(--bg)"/><rect x="9.5" y="6" width="5.5" height="18" rx="1" fill="var(--bg)"/><rect x="16" y="6" width="5.5" height="18" rx="1" fill="var(--bg)"/><rect x="22.5" y="6" width="4.5" height="18" rx="1" fill="var(--bg)"/><rect x="7" y="6" width="4" height="11" rx="1" fill="var(--ink)"/><rect x="13.5" y="6" width="4" height="11" rx="1" fill="var(--ink)"/><rect x="20.2" y="6" width="4" height="11" rx="1" fill="var(--ink)"/></svg>
+      <span>Van's Piano</span>
+    </a>
+    <nav class="nav row" aria-label="Main">
+      <a href="#home" id="nav-home">课程<span class="enn"> Lessons</span></a>
+      <a href="#songs" id="nav-songs">曲库<span class="enn"> Songs</span></a>
+      <a href="#play" id="nav-play">钢琴<span class="enn"> Piano</span></a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="gear" id="setBtn" type="button" aria-label="Settings 设置"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
+  </div>
+</header>
+<main id="app"></main>
+
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+function el(html){const t=document.createElement("template");t.innerHTML=html.trim();return t.content.firstElementChild}
+function isPlain(o){return o&&typeof o==="object"&&!Array.isArray(o)}
+function merge(a,b){const out={...(a||{})};for(const k in b){out[k]=isPlain(b[k])&&isPlain(out[k])?merge(out[k],b[k]):b[k]}return out}
+
+/* ---------- notes ---------- */
+const LET="CDEFGAB", PC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+const SHARP_NAMES=["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"];
+function parseNote(s){const m=/^([A-G])([#b]?)(\d)$/.exec(s);if(!m)throw new Error("bad note "+s);const L=m[1],acc=m[2],oct=+m[3];return{L,acc,oct,midi:(oct+1)*12+PC[L]+(acc==="#"?1:acc==="b"?-1:0),step:oct*7+LET.indexOf(L)}}
+const midiOf=s=>parseNote(s).midi;
+const isBlack=m=>[1,3,6,8,10].includes(((m%12)+12)%12);
+const pretty=s=>s.replace("#","♯").replace("b","♭");
+function nameOfMidi(m){return SHARP_NAMES[m%12]}
+function letterOf(s){const p=parseNote(s);return p.L+(p.acc==="#"?"♯":p.acc==="b"?"♭":"")}
+
+/* ---------- audio: synthesized piano (no samples, no licences) ---------- */
+let AC=null,MASTER=null,NOISE=null;
+function audio(){
+  if(!AC){
+    const C=window.AudioContext||window.webkitAudioContext; if(!C) return null;
+    AC=new C();
+    try{ if(navigator.audioSession) navigator.audioSession.type="playback"; }catch(e){}
+    const comp=AC.createDynamicsCompressor(); comp.threshold.value=-16; comp.ratio.value=4; comp.attack.value=0.003; comp.release.value=0.2;
+    MASTER=AC.createGain(); MASTER.gain.value=0.9; MASTER.connect(comp); comp.connect(AC.destination);
+    NOISE=AC.createBuffer(1,AC.sampleRate*0.05,AC.sampleRate); const d=NOISE.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
+    const s=AC.createBufferSource(); s.buffer=AC.createBuffer(1,1,22050); s.connect(AC.destination); s.start(0);
+  }
+  if(AC.state!=="running"){ AC.resume().catch(()=>{}); }
+  return AC;
+}
+document.addEventListener("pointerdown",()=>audio(),{capture:true});
+function playNote(midi,o={}){
+  const c=audio(); if(!c) return {release(){}};
+  const t=o.when??c.currentTime, vel=o.vel??0.75, dest=o.dest||MASTER;
+  const f=440*Math.pow(2,(midi-69)/12);
+  const out=c.createGain(); out.gain.value=0;
+  const lp=c.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=Math.min(9000,f*6+900); lp.Q.value=0.4;
+  out.connect(lp); lp.connect(dest);
+  const tau=Math.max(0.35,1.9-(midi-36)*0.032);
+  const peak=vel*0.2*(midi<52?1.15:1);
+  out.gain.setValueAtTime(0,t); out.gain.linearRampToValueAtTime(peak,t+0.005); out.gain.setTargetAtTime(0,t+0.005,tau);
+  const P=[[1,1],[2,.55],[3,.3],[4,.16],[5,.09],[6,.05],[7,.03],[8,.02]], B=0.0004, oscs=[];
+  for(const [n,a] of P){
+    const fn=f*n*Math.sqrt(1+B*n*n); if(fn>15000) continue;
+    const os=c.createOscillator(); os.frequency.value=fn;
+    const g=c.createGain(); g.gain.setValueAtTime(a,t); g.gain.setTargetAtTime(a*0.05,t,(tau*1.3)/Math.sqrt(n));
+    os.connect(g); g.connect(out); os.start(t); oscs.push(os);
+  }
+  const nz=c.createBufferSource(); nz.buffer=NOISE; const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=Math.min(6000,f*3); bp.Q.value=1.2;
+  const ng=c.createGain(); ng.gain.value=vel*0.05; nz.connect(bp); bp.connect(ng); ng.connect(out); nz.start(t);
+  let done=false;
+  const release=(when)=>{ if(done) return; done=true; const r=Math.max(when??c.currentTime,t+0.12); out.gain.setTargetAtTime(0,r,0.07); oscs.forEach(os=>{try{os.stop(r+0.6)}catch(e){}}); };
+  if(o.dur!=null) release(t+o.dur); else setTimeout(()=>release(),6000);
+  return {release};
+}
+function click(when,accent,dest){
+  const c=audio(); if(!c) return;
+  const os=c.createOscillator(); os.frequency.value=accent?1760:1250;
+  const g=c.createGain(); g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(accent?0.45:0.25,when+0.002); g.gain.exponentialRampToValueAtTime(0.0001,when+0.05);
+  os.connect(g); g.connect(dest||MASTER); os.start(when); os.stop(when+0.07);
+}
+function newBus(){const c=audio(); if(!c) return null; const b=c.createGain(); b.connect(MASTER); return b}
+function killBus(b){ if(!b||!AC) return; b.gain.setTargetAtTime(0,AC.currentTime,0.02); setTimeout(()=>{try{b.disconnect()}catch(e){}},400) }
+
+/* ---------- microphone listening: pitch detection for single notes ---------- */
+let MIC_OK=false; try{ MIC_OK=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)&&window.self===window.top; }catch(e){ MIC_OK=false; }
+const Mic={on:false,stream:null,src:null,an:null,buf:null,raf:0,subs:new Set(),ui:new Set(),level:0,heard:null};
+function yinPitch(buf,sr){
+  const W=1024, tMin=Math.floor(sr/1400), tMax=Math.min(W-1,Math.floor(sr/90));
+  const c=new Float32Array(tMax+2); c[0]=1; let run=0;
+  for(let t=1;t<=tMax+1;t++){ let sum=0; for(let j=0;j<W;j++){ const x=buf[j]-buf[j+t]; sum+=x*x; } run+=sum; c[t]=run>0?sum*t/run:1; }
+  let tau=-1;
+  for(let t=tMin;t<=tMax;t++){ if(c[t]<0.15){ while(t+1<=tMax&&c[t+1]<c[t]) t++; tau=t; break; } }
+  if(tau<0){ let best=1,bt=-1; for(let t=tMin;t<=tMax;t++){ if(c[t]<best){best=c[t];bt=t} } if(best<0.25) tau=bt; else return null; }
+  const a=c[tau-1],b=c[tau],e=c[tau+1]; const den=a+e-2*b; const shift=den?clamp(0.5*(a-e)/den,-1,1):0;
+  return {f:sr/(tau+shift),q:1-b};
+}
+function micListen(fn){ Mic.subs.add(fn); return ()=>Mic.subs.delete(fn); }
+function micEmit(m){ Mic.heard=m; Mic.subs.forEach(f=>{try{f(m)}catch(e){}}); }
+async function micStart(){
+  const c=audio(); if(!c) throw new Error("no audio");
+  try{ if(navigator.audioSession) navigator.audioSession.type="play-and-record"; }catch(e){}
+  const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  Mic.stream=stream; Mic.src=c.createMediaStreamSource(stream); Mic.an=c.createAnalyser(); Mic.an.fftSize=2048; Mic.src.connect(Mic.an);
+  Mic.buf=new Float32Array(Mic.an.fftSize); Mic.on=true;
+  const ring=[]; let floor=0.004, lastOn=0, pending=0, votes=[], lastEmit=null, quietSince=0, stable=null, stableN=0;
+  const loop=()=>{
+    if(!Mic.on) return;
+    Mic.an.getFloatTimeDomainData(Mic.buf);
+    let ss=0; for(let i=0;i<Mic.buf.length;i++) ss+=Mic.buf[i]*Mic.buf[i];
+    const rms=Math.sqrt(ss/Mic.buf.length), now=performance.now();
+    if(rms<floor*2) floor=floor*0.98+rms*0.02;
+    const thr=Math.max(0.006,floor*3);
+    Mic.level=clamp(rms/0.15,0,1);
+    const ringMin=ring.length?Math.min(...ring):rms, prev=ring.length?ring[ring.length-1]:rms;
+    ring.push(rms); if(ring.length>8) ring.shift();
+    if(rms>thr&&rms>ringMin*1.7&&rms>prev*1.12&&now-lastOn>110){ lastOn=now; pending=now+320; votes=[]; }
+    let midi=null;
+    if(rms>thr){ const r=yinPitch(Mic.buf,c.sampleRate); if(r&&r.q>0.8){ const m=Math.round(69+12*Math.log2(r.f/440)); if(m>=36&&m<=96) midi=m; } quietSince=0; }
+    else { if(!quietSince) quietSince=now; if(now-quietSince>220) lastEmit=null; }
+    if(midi===stable) stableN++; else { stable=midi; stableN=midi==null?0:1; }
+    if(pending){
+      if(midi!=null&&now-lastOn>25) votes.push(midi);
+      const last2=votes.slice(-2);
+      if(last2.length===2&&last2[0]===last2[1]){ pending=0; lastEmit=last2[0]; micEmit(last2[0]); }
+      else if(now>pending){ pending=0; if(votes.length){ const cnt={}; votes.forEach(v=>cnt[v]=(cnt[v]||0)+1); const m=+Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0][0]; lastEmit=m; micEmit(m); } }
+    } else if(stable!=null&&stableN>=4&&lastEmit!=null&&stable!==lastEmit&&Math.abs(stable-lastEmit)!==12){ lastEmit=stable; micEmit(stable); }
+    Mic.ui.forEach(f=>{try{f()}catch(e){}});
+    Mic.raf=requestAnimationFrame(loop);
+  };
+  Mic.raf=requestAnimationFrame(loop);
+}
+function micStop(){
+  Mic.on=false; cancelAnimationFrame(Mic.raf);
+  try{ Mic.stream&&Mic.stream.getTracks().forEach(t=>t.stop()); }catch(e){}
+  try{ Mic.src&&Mic.src.disconnect(); }catch(e){}
+  Mic.stream=Mic.src=Mic.an=null; Mic.level=0; Mic.heard=null;
+  try{ if(navigator.audioSession) navigator.audioSession.type="playback"; }catch(e){}
+  Mic.ui.forEach(f=>{try{f()}catch(e){}});
+}
+async function micToggle(msgEl){
+  if(Mic.on){ micStop(); return; }
+  try{ await micStart(); }
+  catch(e){ if(msgEl){ msgEl.className="pstat bad"; msgEl.textContent="The microphone isn't available. In Safari, tap the aA button in the address bar, choose Website Settings, set Microphone to Allow, then try again."; } }
+  Mic.ui.forEach(f=>{try{f()}catch(e){}});
+}
+const micIcon=()=>`<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="5" y="1" width="6" height="9" rx="3" fill="currentColor"/><path d="M3 7.5a5 5 0 0 0 10 0M8 12.5V15" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>`;
+const noteLabel=m=>nameOfMidi(m)+(Math.floor(m/12)-1);
+/* a mic button + "heard" line bound to the shared Mic state */
+function micControls(host,msgEl,key){
+  if(!MIC_OK) return null;
+  const btn=el(`<button class="btn" type="button" data-mic aria-pressed="false"></button>`);
+  const heard=el(`<div class="heard" hidden><span class="meter"><span></span></span><span data-t>Play a key on your piano… 请弹一个键……</span></div>`);
+  const sync=()=>{ btn.setAttribute("aria-pressed",Mic.on); btn.innerHTML=micIcon()+(Mic.on?" Listening 正在听":" Use my piano 用我的钢琴"); heard.hidden=!Mic.on; $(".meter>span",heard).style.width=(Mic.level*100)+"%"; };
+  btn.onclick=()=>micToggle(msgEl);
+  Mic.ui.add(sync); DISPOSE.push(()=>Mic.ui.delete(sync)); sync();
+  const off=micListen(m=>{ $("[data-t]",heard).textContent="Heard "+jnText(m,key||"C")+" · "+noteLabel(m); }); DISPOSE.push(off);
+  return {btn,heard};
+}
+
+/* ---------- 简谱 numbers: 1 = the key note in the octave of middle C ---------- */
+const KEYPC={C:0,D:2,F:5,G:7};
+const JMAP=[["",1],["♯",1],["",2],["♯",2],["",3],["",4],["♯",4],["",5],["♯",5],["",6],["♭",7],["",7]];
+function jn(m,key){ const t=60+(KEYPC[key||"C"]??0), rel=m-t, w=((rel%12)+12)%12; const [acc,d]=JMAP[w]; return {acc,d,oct:Math.floor(rel/12)}; }
+function jnText(m,key){ const j=jn(m,key); return j.acc+j.d+(j.oct>0?"̇".repeat(j.oct):j.oct<0?"̣".repeat(-j.oct):""); }
+function jnKeyHTML(m,key,all){ const j=jn(m,key); if(j.acc&&!all) return ""; return `<span class="kd">${"•".repeat(Math.max(0,j.oct))}</span><span>${j.acc?`<small>${j.acc}</small>`:""}${j.d}</span><span class="kd">${"•".repeat(Math.max(0,-j.oct))}</span>`; }
+
+/* ---------- song format ---------- */
+function parseLine(str){
+  const out=str.trim().split(/\s+/).filter(t=>t!=="|").map(tok=>{
+    let tie=false; if(tok.endsWith("~")){ tie=true; tok=tok.slice(0,-1); }
+    const [n,d,f,label]=tok.split(":");
+    if(n==="R") return {n:null,d:+(d||1),f:null,label:null};
+    const ns=n.split("+");
+    return {n:ns.length>1?ns:ns[0], d:+(d||1), f:f?f.split("+").map(Number):null, label:label||null, tie};
+  });
+  out.forEach((x,i)=>{ if(i>0&&out[i-1].tie) x.tied=true; });
+  return out;
+}
+
+/* ---------- songs (public-domain melodies, arranged for this app) ---------- */
+const ODE_RH="E4:1:3 E4:1:3 F4:1:4 G4:1:5 | G4:1:5 F4:1:4 E4:1:3 D4:1:2 | C4:1:1 C4:1:1 D4:1:2 E4:1:3 | E4:1.5:3 D4:.5:2 D4:2:2 | E4:1:3 E4:1:3 F4:1:4 G4:1:5 | G4:1:5 F4:1:4 E4:1:3 D4:1:2 | C4:1:1 C4:1:1 D4:1:2 E4:1:3 | D4:1.5:2 C4:.5:1 C4:2:1";
+const RH={name:"Right hand",zh:"右手",clef:"treble"}, LH={name:"Left hand",zh:"左手",clef:"bass"};
+const SONGS={
+  ode:{title:"Ode to Joy",zh:"欢乐颂",note:"Beethoven, Symphony No. 9 (1824)",tempo:84,parts:[
+    {...RH,notes:parseLine(ODE_RH)},
+    {...LH,notes:parseLine("C3:4:5 | G3:4:1 | C3:4:5 | G3:4:1 | C3:4:5 | G3:4:1 | C3:4:5 | G3:2:1 C3:2:5")}]},
+  odeCall:{title:"Ode to Joy, hands taking turns",zh:"欢乐颂（两手轮流）",note:"Right hand plays bars 1–4, left hand answers in bars 5–8",tempo:80,parts:[
+    {...RH,notes:parseLine("E4:1:3 E4:1:3 F4:1:4 G4:1:5 | G4:1:5 F4:1:4 E4:1:3 D4:1:2 | C4:1:1 C4:1:1 D4:1:2 E4:1:3 | E4:1.5:3 D4:.5:2 D4:2:2 | R:4 | R:4 | R:4 | R:4")},
+    {...LH,notes:parseLine("R:4 | R:4 | R:4 | R:4 | E3:1:3 E3:1:3 F3:1:2 G3:1:1 | G3:1:1 F3:1:2 E3:1:3 D3:1:4 | C3:1:5 C3:1:5 D3:1:4 E3:1:3 | D3:1.5:4 C3:.5:5 C3:2:5")}]},
+  goinghome:{title:"Going Home",zh:"念故乡",note:"Dvořák, “New World” Symphony (1893)",tempo:60,parts:[
+    {...RH,notes:parseLine("E4:1.5 G4:.5 G4:2 | E4:1.5 D4:.5 C4:2 | D4:1.5 E4:.5 G4:1.5 E4:.5 | D4:4 | E4:1.5 G4:.5 G4:2 | E4:1.5 D4:.5 C4:2 | D4:1.5 E4:.5 D4:1.5 C4:.5 | C4:4")},
+    {...LH,notes:parseLine("C3:4:5 | C3:4:5 | G3:4:1 | G3:4:1 | C3:4:5 | C3:4:5 | G3:4:1 | C3:4:5")}]},
+  songbieA:{title:"Farewell, first half",zh:"送别（前半首）",note:"Words by Li Shutong (1915), melody by J. P. Ordway (1851)",tempo:60,parts:[
+    {...RH,notes:parseLine("G4:1:2 E4:.5:1 G4:.5:2 C5:2:5 | A4:1:3 C5:1:5 G4:2:2 | G4:1:5 C4:.5:1 D4:.5:2 E4:1:3 D4:.5:2 C4:.5:1 | D4:4:2 | G4:1:2 E4:.5:1 G4:.5:2 C5:1.5:5 B4:.5:4 | A4:1:3 C5:1:5 G4:2:2 | G4:1:5 D4:.5:2 E4:.5:3 F4:1.5:4 B3:.5:1 | C4:4:2")},
+    {...LH,notes:parseLine("C3:4:5 | C3:4:5 | C3:4:5 | G3:4:1 | C3:4:5 | C3:4:5 | G3:4:1 | C3:4:5")}]},
+  songbie:{title:"Farewell",zh:"送别",note:"Words by Li Shutong (1915), melody by J. P. Ordway (1851)",tempo:66,parts:[
+    {...RH,notes:parseLine("G4:1:2 E4:.5:1 G4:.5:2 C5:2:5 | A4:1:3 C5:1:5 G4:2:2 | G4:1:5 C4:.5:1 D4:.5:2 E4:1:3 D4:.5:2 C4:.5:1 | D4:4:2 | G4:1:2 E4:.5:1 G4:.5:2 C5:1.5:5 B4:.5:4 | A4:1:3 C5:1:5 G4:2:2 | G4:1:5 D4:.5:2 E4:.5:3 F4:1.5:4 B3:.5:1 | C4:4:2 | A4:1:3 C5:1:5 C5:2:5 | B4:1:4 A4:.5:3 B4:.5:4 C5:2:5 | A4:.5:3 B4:.5:4 C5:.5:5 A4:.5:3 A4:.5:3 G4:.5:2 E4:.5:1 C4:.5:1 | D4:4:2 | G4:1:2 E4:.5:1 G4:.5:2 C5:1.5:5 B4:.5:4 | A4:1:3 C5:1:5 G4:2:2 | G4:1:5 D4:.5:2 E4:.5:3 F4:1.5:4 B3:.5:1 | C4:4:2")},
+    {...LH,notes:parseLine("C3:4 | F3:2 C3:2 | C3:4 | G3:4 | C3:4 | F3:2 C3:2 | G3:4 | C3:4 | F3:4 | C3:4 | F3:2 C3:2 | G3:4 | C3:4 | F3:2 C3:2 | G3:4 | C3:4")}]},
+  molihua:{title:"Jasmine Flower",zh:"茉莉花",note:"Traditional Jiangsu folk melody (18th century), in 1=C",tempo:63,parts:[
+    {...RH,notes:parseLine("E4:1:1 E4:.5:1 G4:.5:2 A4:.5:3 C5:.5:5 C5:.5:5 A4:.5:3 | G4:1:2 G4:.5:2 A4:.5:3 G4:2:2 | E4:1:1 E4:.5:1 G4:.5:2 A4:.5:3 C5:.5:5 C5:.5:5 A4:.5:3 | G4:1:2 G4:.5:2 A4:.5:3 G4:2:2 | G4:1:2 G4:1:2 G4:1:2 E4:.5:1 G4:.5:2 | A4:1:3 A4:.5:3 G4:.5:2 G4:2:2 | E4:1:3 D4:.5:2 E4:.5:3 G4:1:5 E4:.5:3 D4:.5:2 | C4:1:1 C4:.5:1 D4:.5:2 C4:2:1 | E4:.5:3 D4:.5:2 C4:.5:1 E4:.5:3 D4:1.5:2 E4:.5:3 | G4:1:2 A4:.5:3 C5:.5:5 G4:2:2 | D4:1:3 E4:.5:4 G4:.5:5 D4:.5:3 E4:.5:4 C4:.5:2 A3:.5:1 | G3:2:1 A3:1:2 A3:.5:2 C4:.5:3 | D4:1.5:4 E4:.5:5 C4:.5:3 D4:.5:4 C4:.5:3 A3:.5:1 | G3:4:1")},
+    {...LH,notes:parseLine("C3:4 | G2:4 | C3:4 | G2:4 | C3:4 | G2:4 | C3:4 | C3:4 | C3:4 | G2:4 | A2:4 | G2:4 | D3:4 | G2:4")}]},
+  auld:{title:"Auld Lang Syne",zh:"友谊地久天长",note:"Scottish folk melody, words by Robert Burns (1788)",tempo:76,key:"F",parts:[
+    {...RH,notes:parseLine("R:3 C4:1 | F4:1.5 F4:.5 F4:1 A4:1 | G4:1.5 F4:.5 G4:1 A4:1 | F4:1.5 F4:.5 A4:1 C5:1 | D5:3 D5:1 | C5:1.5 A4:.5 A4:1 F4:1 | G4:1.5 F4:.5 G4:1 A4:1 | F4:1.5 D4:.5 D4:1 C4:1 | F4:3 D5:1 | C5:1.5 A4:.5 A4:1 F4:1 | G4:1.5 F4:.5 G4:1 D5:1 | C5:1.5 A4:.5 A4:1 C5:1 | D5:3 F5:1 | C5:1.5 A4:.5 A4:1 F4:1 | G4:1.5 F4:.5 G4:1 A4:1 | F4:1.5 D4:.5 D4:1 C4:1 | F4:4")},
+    {...LH,notes:parseLine("R:4 | F3:4 | C3:4 | F3:4 | D3:4 | F3:4 | C3:4 | F3:4 | F3:4 | F3:4 | C3:4 | F3:4 | D3:4 | F3:4 | C3:4 | F3:4 | F3:4")}]},
+  birthday:{title:"Happy Birthday",zh:"生日快乐",note:"Mildred & Patty Hill (1893), public domain",tempo:100,bpb:3,key:"F",parts:[
+    {...RH,notes:parseLine("R:2 C4:.5 C4:.5 | D4:1 C4:1 F4:1 | E4:2 C4:.5 C4:.5 | D4:1 C4:1 G4:1 | F4:2 C4:.5 C4:.5 | C5:1 A4:1 F4:1 | E4:1 D4:1 Bb4:.5 Bb4:.5 | A4:1 F4:1 G4:1 | F4:3")},
+    {...LH,notes:parseLine("R:3 | F3:3 | C3:3 | C3:3 | F3:3 | F3:3 | C3:2 Bb2:1 | F3:2 C3:1 | F3:3")}]},
+  amazing:{title:"Amazing Grace",zh:"奇异恩典",note:"American hymn tune “New Britain” (1829)",tempo:76,bpb:3,key:"F",parts:[
+    {...RH,notes:parseLine("R:2 C4:1 | F4:2 A4:.5 F4:.5 | A4:2 G4:1 | F4:2 D4:1 | C4:2 C4:1 | F4:2 A4:.5 F4:.5 | A4:2 G4:1 | C5:3~ | C5:2 A4:1 | C5:2 A4:.5 F4:.5 | A4:2 G4:1 | F4:2 D4:1 | C4:2 C4:1 | F4:2 A4:.5 F4:.5 | A4:2 G4:1 | F4:3~ | F4:3")},
+    {...LH,notes:parseLine("R:3 | F3:3 | F3:3 | Bb2:3 | F3:3 | F3:3 | C3:3 | F3:3 | F3:3 | F3:3 | C3:3 | Bb2:3 | F3:3 | F3:3 | C3:3 | F3:3 | F3:3")}]},
+  furelise:{title:"Für Elise (opening)",zh:"致爱丽丝",note:"Beethoven (1810)",tempo:66,bpb:3,parts:[
+    {...RH,notes:parseLine("R:2 E5:.5:5 D#5:.5:4 | E5:.5:5 D#5:.5:4 E5:.5:5 B4:.5:2 D5:.5:4 C5:.5:3 | A4:1:1 R:.5 C4:.5:1 E4:.5:2 A4:.5:3 | B4:1:4 R:.5 E4:.5:1 G#4:.5:3 B4:.5:4 | C5:1:5 R:.5 E4:.5:1 E5:.5:5 D#5:.5:4 | E5:.5:5 D#5:.5:4 E5:.5:5 B4:.5:2 D5:.5:4 C5:.5:3 | A4:1:1 R:.5 C4:.5:1 E4:.5:2 A4:.5:3 | B4:1:4 R:.5 E4:.5:1 C5:.5:4 B4:.5:3 | A4:3:2")},
+    {...LH,notes:parseLine("R:3 | R:3 | A2:.5 E3:.5 A3:.5 R:1.5 | E2:.5 E3:.5 G#3:.5 R:1.5 | A2:.5 E3:.5 A3:.5 R:1.5 | R:3 | A2:.5 E3:.5 A3:.5 R:1.5 | E2:.5 E3:.5 G#3:.5 R:1.5 | A2:.5 E3:.5 A3:.5 R:1.5")}]},
+  canon:{title:"Canon",zh:"卡农",note:"Pachelbel (c. 1680), simplified in C",tempo:60,parts:[
+    {...RH,notes:parseLine("E5:2 D5:2 | C5:2 B4:2 | A4:2 G4:2 | A4:2 B4:2 | C5:2 B4:2 | A4:2 G4:2 | F4:2 E4:2 | F4:2 D4:2 | E5:2 D5:2 | C5:2 B4:2 | A4:2 G4:2 | A4:2 B4:2 | C5:4")},
+    {...LH,notes:parseLine("C3:2 G2:2 | A2:2 E2:2 | F2:2 C2:2 | F2:2 G2:2 | C3:2 G2:2 | A2:2 E2:2 | F2:2 C2:2 | F2:2 G2:2 | C3:2 G2:2 | A2:2 E2:2 | F2:2 C2:2 | F2:2 G2:2 | C3:4")}]}
+};
+
+/* fill in five-finger-position fingering wherever a song doesn't give it */
+function autoFingers(notes,hand){
+  const st=notes.map(nt=>(nt.n&&!Array.isArray(nt.n))?parseNote(nt.n).step:null);
+  let t=null;
+  for(let i=0;i<notes.length;i++){
+    const sv=st[i]; if(sv==null) continue;
+    if(notes[i].tied&&i>0&&notes[i-1].f){ notes[i].f=notes[i-1].f; continue; }
+    if(t==null||sv<t||sv>t+4){ let lo=sv,hi=sv; for(let j=i;j<notes.length;j++){ const sj=st[j]; if(sj==null) continue; const nl=Math.min(lo,sj),nh=Math.max(hi,sj); if(nh-nl>4) break; lo=nl; hi=nh; } t=lo; }
+    if(!notes[i].f) notes[i].f=[hand==="L"?5-(sv-t):(sv-t)+1];
+  }
+}
+Object.values(SONGS).forEach(sg=>sg.parts.forEach(p=>autoFingers(p.notes,p.clef==="bass"?"L":"R")));
+
+/* ---------- lessons: one hand-coordination step each, on a song ---------- */
+const UNITS=[["First steps","入门"],["Chinese songs","中国歌曲"]];
+const LESSONS=[
+ {id:"ode1",unit:0,title:"Ode to Joy: right hand",zh:"欢乐颂：右手",mins:15,sum:"Find 1, meet finger numbers, and play the melody while the app plays the left hand.",sumzh:"找到 1，认识指法数字，右手弹旋律，左手交给 app。",blocks:[
+  {t:"p",cls:"lead",h:"Your first song is a tune you already know. You play the melody with your right hand; the app plays the left hand for you.",zh:"第一首是你熟悉的旋律。你用右手弹旋律，左手部分由 app 来弹。"},
+  {t:"p",h:"Sit facing the middle of the piano, on the front half of the seat, with your forearms level with the keys. Curve your fingers as if holding a ball, and play on the fingertips.",zh:"坐在钢琴正中间，只坐椅子的前半部分，前臂和琴键平齐。手指自然弯曲，像握着一个球，用指尖弹。"},
+  {t:"p",h:"Find <b>middle C</b>: the white key just left of the pair of black keys nearest the middle. In every lesson here 1=C, so middle C is <b>1</b>, and the white keys to its right are 2 3 4 5 6 7.",zh:"找到<b>中央C</b>：靠近中间那组两个黑键左边的白键。这里每一课都是 1=C，所以中央C就是 <b>1</b>，右边的白键依次是 2 3 4 5 6 7。"},
+  {t:"kb",from:"C4",to:"C5",fingers:{C4:1,D4:2,E4:3,F4:4,G4:5},seqs:[{label:"Play 1 2 3 4 5 · 弹一遍",notes:"C4 D4 E4 F4 G4 F4 E4 D4 C4:2"}],cap:"The number at the bottom of each key is its 简谱 number. The dark circle is the finger to use.",capzh:"琴键下方的数字是简谱音名；黑色圆圈里是要用的手指。"},
+  {t:"p",h:"So there are two kinds of numbers. <b>Note numbers</b> are the 简谱 you already read. <b>Finger numbers</b> name your fingers: thumb is 1, little finger is 5. In this song your thumb sits on 1 and each finger has its own key, so the two kinds of number happen to match. Later they won't.",zh:"所以这里有两种数字。<b>音名数字</b>就是你熟悉的简谱。<b>指法数字</b>是手指的编号：大拇指是 1，小指是 5。这首歌里大拇指放在 1 上，每个手指管一个键，所以两种数字刚好一样。以后就不一定了。"},
+  {t:"hands"},
+  {t:"findKey",id:"q-find1",title:"Find the numbers · 找音",from:"C3",to:"C6",labels:"none",intro:"The keys have no labels here. Use the black-key groups to find each number. 这里琴键没有标记，用黑键分组来找。",asks:[{p:"Tap 1, middle C · 点中央的 1",n:"C4"},{p:"Tap 3 · 点 3",n:"E4"},{p:"Tap 5 · 点 5",n:"G4"},{p:"Tap 2 · 点 2",n:"D4"},{p:"Tap 4 · 点 4",n:"F4"},{p:"Tap 1̇, the high 1 · 点高音 1̇",n:"C5"}]},
+  {t:"p",h:"Now the song. Press <b>Listen</b> first. Then <b>Practice</b>: the app lights the next key and waits for you, so take your time. When it feels easy, try <b>Play along</b>: the app counts in, then plays the left hand in time while you play the melody.",zh:"现在弹曲子。先按<b>听</b>。再按<b>练习</b>：app 会点亮下一个键并等你弹，不用着急。熟了以后试试<b>跟弹</b>：app 先数拍，然后按节奏弹左手，你弹旋律。"},
+  {t:"song",song:"ode",part:0},
+  {t:"tip",h:"<b>On your piano</b>Put the iPad on the music stand and turn on <b>Use my piano</b>. The app listens through the microphone and moves on when it hears the right note.",zh:"把 iPad 放在谱架上，打开<b>用我的钢琴</b>。app 通过麦克风听你弹，听到正确的音就继续。"}
+ ]},
+ {id:"home1",unit:0,title:"Going Home: the left hand",zh:"念故乡：左手",mins:15,sum:"One long, low note per bar under a slow melody.",sumzh:"每小节一个长长的低音，托住慢旋律。",blocks:[
+  {t:"p",cls:"lead",h:"Now the left hand. Its job here is simple: one long, low note at the start of each bar, held while the melody moves above it.",zh:"现在练左手。它这里的任务很简单：每小节开头弹一个长长的低音，旋律在上面走的时候一直按住。"},
+  {t:"kb",from:"C3",to:"C4",fingers:{C3:5,D3:4,E3:3,F3:2,G3:1},seqs:[{label:"Play the left hand · 左手弹一遍",notes:"C3 D3 E3 F3 G3 F3 E3 D3 C3:2"}],cap:"Left hand: little finger (5) on the low 1, thumb (1) on the low 5. The dot under a number means one octave lower.",capzh:"左手：小指（5）放在低音 1，大拇指（1）放在低音 5。数字下面的点表示低八度。"},
+  {t:"p",h:"The left hand counts its fingers the other way: finger 5 is on the lowest key. In this song it only uses two keys, 1̣ with finger 5 and 5̣ with the thumb.",zh:"左手的指法是反过来的：小指 5 在最低的键上。这首歌左手只用两个键：小指弹 1̣，大拇指弹 5̣。"},
+  {t:"fingers",id:"q-fingers",title:"Which finger? · 哪个手指",rounds:8},
+  {t:"p",h:"First, play the left hand while the app plays the melody. Choose <b>Play along</b>, and hold each note for all four beats, until the next bar begins.",zh:"先弹左手，让 app 弹旋律。选<b>跟弹</b>，每个音按满四拍，一直到下一小节开始。"},
+  {t:"song",song:"goinghome",part:1},
+  {t:"p",h:"Then learn the melody with your right hand. It uses the same five keys as Ode to Joy, 1 to 5. The dot after a number (3·) makes it longer, so the next note comes quickly.",zh:"然后用右手学旋律。它和欢乐颂一样，只用 1 到 5 这五个键。数字后面的点（3·）让这个音变长，下一个音就来得快一些。"},
+  {t:"song",song:"goinghome",part:0},
+  {t:"tip",h:"<b>Count out loud</b>Say “1 2 3 4” as you play. Beginners usually let go of long notes too early, and holding them is half of playing with two hands.",zh:"边弹边数出声“1 2 3 4”。初学者常常把长音放得太早，而按住长音正是两只手配合的一半功夫。"}
+ ]},
+ {id:"ode2",unit:0,title:"Ode to Joy: hands take turns",zh:"欢乐颂：两手轮流",mins:15,sum:"The right hand plays the first half; the left hand answers with the second.",sumzh:"右手弹前半段，左手接着弹后半段。",blocks:[
+  {t:"p",cls:"lead",h:"Now the hands take turns. The right hand plays the first half of Ode to Joy; then the left hand answers with the second half, an octave lower.",zh:"现在两只手轮流弹。右手弹欢乐颂的前半段，然后左手低八度接着弹后半段。"},
+  {t:"p",h:"Both hands sit in the same shape: right thumb on 1, left little finger on the low 1̣. Only one hand plays at a time, so you can look at the hand that's about to play.",zh:"两只手都放在同样的位置：右手大拇指在 1，左手小指在低音 1̣。每次只有一只手弹，所以你可以看着马上要弹的那只手。"},
+  {t:"p",h:"The left hand plays the same tune with mirrored fingers: where the right hand uses 3, the left uses 3 too, but where the right uses 5, the left uses 1. Follow the circles on the keys.",zh:"左手弹同样的旋律，但指法是镜像的：右手用 3 的地方左手也用 3，右手用 5 的地方左手用 1。跟着琴键上的圆圈弹。"},
+  {t:"p",h:"The tricky moment is the handover between bar 4 and bar 5. Get your left hand ready on the keys during the long last note of bar 4.",zh:"难点在第 4 小节到第 5 小节的交接。在第 4 小节最后那个长音时，就把左手放到琴键上准备好。"},
+  {t:"song",song:"odeCall",part:"all"},
+  {t:"tip",h:"<b>Practise the handover</b>Set <b>Bars</b> to 4 to 5 and turn on <b>Loop</b>. The app repeats those two bars until the switch feels automatic.",zh:"把<b>小节</b>设成 4 到 5，打开<b>循环</b>。app 会一直重复这两小节，直到换手变得自然。"}
+ ]},
+ {id:"home2",unit:0,title:"Going Home: hands together",zh:"念故乡：双手合弹",mins:20,sum:"Both hands play at once, on the first beat of each bar.",sumzh:"双手第一次同时弹：每小节第一拍一起落下。",blocks:[
+  {t:"p",cls:"lead",h:"For the first time, both hands play at once, but only at the start of each bar. The left hand's long note always lands together with the right hand's first note.",zh:"第一次双手同时弹，但只在每小节开头。左手的长音总是和右手的第一个音一起落下。"},
+  {t:"p",h:"You already know both parts from the earlier lesson. Choose <b>Both</b>, slow the speed right down, and use <b>Practice</b>: the app waits until you've pressed every key that starts together.",zh:"两只手的部分你在前面已经学过了。选<b>双手</b>，把速度调慢，用<b>练习</b>：app 会等你把一起开始的键都按下。"},
+  {t:"p",h:"Between the first beats, only the right hand moves while the left hand keeps holding. That holding is the real skill here: one hand still, the other moving.",zh:"在每小节第一拍之后，只有右手在动，左手一直按住。这里真正练的就是这个：一只手不动，另一只手在动。"},
+  {t:"p",h:"A note on the microphone: it can hear one note at a time, so when both hands play together it checks only one of them. To check both, tap the keys on the iPad screen, or use <b>Play along</b> and listen.",zh:"关于麦克风：它一次只能听出一个音，所以双手一起弹时它只检查其中一个。想两只手都检查，就在 iPad 屏幕上点琴键，或者用<b>跟弹</b>自己听。"},
+  {t:"song",song:"goinghome",part:"all"},
+  {t:"tip",h:"<b>When it falls apart</b>Slow down to 48, set <b>Bars</b> to two bars, and turn on <b>Loop</b>. Turn on <b>Speed up</b> and the app adds a little speed each time round.",zh:"把速度降到 48，<b>小节</b>只选两小节，打开<b>循环</b>。再打开<b>渐快</b>，app 每循环一遍就快一点。"}
+ ]},
+ {id:"farewell1",unit:1,title:"Farewell: the first half",zh:"送别：前半首",mins:25,sum:"Your first Chinese song, bars 1–8, with the right hand moving.",sumzh:"第一首中国歌：第 1–8 小节，右手要移动位置。",blocks:[
+  {t:"p",cls:"lead",h:"送别 (Farewell) is your first Chinese song. This lesson covers the first half, bars 1–8, with one long left-hand note per bar.",zh:"《送别》是你的第一首中国歌。这一课学前半首，第 1 到 8 小节，左手每小节一个长音。"},
+  {t:"p",h:"The melody reaches higher than five fingers can cover, so your right hand moves. The moves happen during long notes. Watch the finger circles: when a familiar key shows a new finger number, your hand has moved.",zh:"旋律的音域超过了五个手指，所以右手要移动。移动都发生在长音的时候。注意手指圆圈：熟悉的键上出现了新的指法数字，就说明手要换位置了。"},
+  {t:"p",h:"Look at bar 3. It starts on the same 5 you just held, but with finger 5 instead of 2. Changing finger on a repeated note is how the hand moves without a jump.",zh:"看第 3 小节：它的第一个音和刚才按住的 5 是同一个键，但要换成第 5 指。在重复的音上换指，手就能不跳着移动。"},
+  {t:"p",h:"Bar 7 dips to 7̣, just below middle C. Your thumb reaches down for it, and finger 2 plays the 1 that follows.",zh:"第 7 小节会下到中央C下面的 7̣。大拇指往下够到它，接着用第 2 指弹后面的 1。"},
+  {t:"p",h:"Learn the right hand first (it's selected below), two bars at a time. Then the left hand, then <b>Both</b>.",zh:"先学右手（下面已经选好了），每次两小节。然后左手，最后<b>双手</b>。"},
+  {t:"song",song:"songbieA",part:0},
+  {t:"tip",h:"<b>Two bars at a time</b>Set <b>Bars</b> to 1 to 2 and turn on <b>Loop</b>. When it's comfortable, move on to 3 to 4, then join them up.",zh:"把<b>小节</b>设成 1 到 2，打开<b>循环</b>。熟了以后换成 3 到 4，再把它们连起来。"}
+ ]},
+ {id:"farewell2",unit:1,title:"Farewell: the whole song",zh:"送别：全曲",mins:30,sum:"Bars 9–16, a run of quick notes, and the left hand changing on beat 3.",sumzh:"第 9–16 小节：一串快音，左手在第三拍换音。",blocks:[
+  {t:"p",cls:"lead",h:"Now the whole song. Bars 9–16 are new: the melody climbs higher, and bar 11 has eight quick notes in a row.",zh:"现在弹全曲。第 9 到 16 小节是新的：旋律更高，第 11 小节有连续八个快音。"},
+  {t:"p",h:"The left hand now changes note in the middle of some bars, on beat 3. Count “1 2 3 4” and move on “3”.",zh:"左手在有些小节中间、第三拍换音。数“1 2 3 4”，数到“3”时换。"},
+  {t:"p",h:"Bar 11 (6 7 1̇ 6 6 5 3 1, all half beats) is the hardest bar so far. At the end of the bar, the thumb plays 3 and then hops down to play 1. Practise the bar on its own, right hand only and slowly, before joining it to its neighbours.",zh:"第 11 小节（6 7 1̇ 6 6 5 3 1，都是半拍）是目前最难的一小节。这一小节最后，大拇指弹 3，然后跳下去弹 1。先单独练它，只用右手，慢慢弹，再和前后小节连起来。"},
+  {t:"song",song:"songbie",part:0,bars:[9,16]},
+  {t:"tip",h:"<b>Gradual speed-up</b>Start bar 11 at 44 with <b>Loop</b> and <b>Speed up</b> on. Each time round, the app adds 4 beats per minute.",zh:"第 11 小节从速度 44 开始，打开<b>循环</b>和<b>渐快</b>。每循环一遍，app 加快一点。"}
+ ]},
+ {id:"jasmine",unit:1,title:"Jasmine Flower",zh:"茉莉花",mins:30,sum:"The traditional folk tune, five notes only, with the right hand moving often.",sumzh:"传统民歌旋律，只有五个音，右手经常换位置。",blocks:[
+  {t:"p",cls:"lead",h:"茉莉花 (Jasmine Flower) uses only five notes: 1 2 3 5 6. In 1=C every one of them is a white key.",zh:"《茉莉花》只用五个音：1 2 3 5 6。在 1=C 里它们全都是白键。"},
+  {t:"p",h:"The tune travels from 5̣ below middle C up to 1̇, so the right hand changes position several times. Follow the finger circles, and move during the longer notes.",zh:"旋律从中央C下面的 5̣ 一直到 1̇，所以右手要换好几次位置。跟着手指圆圈弹，在比较长的音上移动。"},
+  {t:"p",h:"The left hand holds one note per bar, mostly the low 1̣ and the 5 below it.",zh:"左手每小节按住一个音，大多是低音 1̣ 和它下面的 5。"},
+  {t:"p",h:"This is the traditional folk melody. The best-known version today is He Fang's 1957 adaptation, so a few notes may differ from the way you sing it.",zh:"这是传统民歌的旋律。现在最流行的是何仿 1957 年改编的版本，所以有几个音可能和你平时唱的不一样。"},
+  {t:"song",song:"molihua",part:0},
+  {t:"tip",h:"<b>Play it gently</b>Keep the notes smooth and connected: let each finger go just as the next one plays.",zh:"弹得柔和一些，音和音连起来：下一个手指按下的同时，上一个手指再抬起。"}
+ ]}
+];
+const LBYID=Object.fromEntries(LESSONS.map((l,i)=>[l.id,{...l,idx:i}]));
+
+
+/* ---------- Van's saved progress (this device, plus GitHub sync) ----------
+   Storage keys start with "vp." so this app never touches Piano for Two's "pp." data:
+   both apps live on the same github.io address and share one storage area in Safari. */
+const ID="van";
+const S={mode:"local",learners:{},loaded:true,note:""};
+function cleanLearner(d){
+  d=d||{};
+  const p=isPlain(d.prefs)?d.prefs:{};
+  return {name:"Van",done:isPlain(d.done)?d.done:{},scores:isPlain(d.scores)?d.scores:{},practice:isPlain(d.practice)?d.practice:{},
+    prefs:{labels:["num","letters","none"].includes(p.labels)?p.labels:"num",zh:p.zh!==false,staff:p.staff===true},
+    created:+d.created||0,profileAt:+d.profileAt||0};
+}
+function ensureVan(){
+  for(const k in S.learners) if(k!==ID) delete S.learners[k];
+  S.learners[ID]=cleanLearner(S.learners[ID]||{created:Date.now()});
+}
+const me=()=>({id:ID,...S.learners[ID]});
+const prefs=()=>S.learners[ID].prefs;
+const zhOn=()=>prefs().zh;
+function isDone(L,id){return !!(L&&L.done&&(+L.done[id]||0)>0)}
+/* combine two copies: newest lesson mark wins, best scores kept */
+function mergeLearner(cur,inc){
+  const out=cleanLearner(JSON.parse(JSON.stringify(cur)));
+  for(const k in inc.done){ const a=+out.done[k]||0, b=+inc.done[k]||0; if(Math.abs(b)>Math.abs(a)) out.done[k]=b; }
+  for(const k in inc.scores){ if(out.scores[k]==null||inc.scores[k]>out.scores[k]) out.scores[k]=inc.scores[k]; }
+  for(const k in inc.practice){ if(out.practice[k]==null||inc.practice[k]<out.practice[k]) out.practice[k]=inc.practice[k]; }
+  if((inc.profileAt||0)>(out.profileAt||0)){ out.prefs={...inc.prefs}; out.profileAt=inc.profileAt; }
+  if(inc.created&&(!out.created||inc.created<out.created)) out.created=inc.created;
+  return out;
+}
+function stable(v){ if(Array.isArray(v)) return "["+v.map(stable).join(",")+"]"; if(isPlain(v)) return "{"+Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+stable(v[k])).join(",")+"}"; return JSON.stringify(v); }
+const forSync=l=>{ const c={...l}; delete c.last; return c; };
+function nextLesson(L){ return LESSONS.find(l=>!isDone(L,l.id))||null; }
+function save(id,patch){
+  if(!S.learners[id]) return;
+  S.learners[id]=cleanLearner(merge(S.learners[id],patch));
+  lsSet("vp.local",S.learners); syncSoon(); refreshChrome();
+}
+function exportCode(){ return "VANPIANO-"+btoa(unescape(encodeURIComponent(JSON.stringify({v:1,learners:S.learners})))); }
+function importCode(str){
+  const raw=String(str||"").trim().replace(/^VANPIANO-/,"");
+  let data; try{ data=JSON.parse(decodeURIComponent(escape(atob(raw)))); }catch(e){ throw new Error("That code isn't complete. Copy the whole code, starting with VANPIANO-, and paste it again."); }
+  if(!data||!isPlain(data.learners)||!data.learners[ID]) throw new Error("That code doesn't contain Van's progress.");
+  const cur=S.learners[ID], m=mergeLearner(cur,cleanLearner(data.learners[ID]));
+  const changed=stable(forSync(m))!==stable(forSync(cur));
+  if(changed){ S.learners[ID]=m; lsSet("vp.local",S.learners); syncSoon(); }
+  return changed;
+}
+function openMoveSheet(){
+  const veil=el(`<div class="veil" role="dialog" aria-modal="true" aria-label="Progress code"><div class="sheet">
+    <h2>Progress code <span class="zh">进度码</span></h2>
+    <p style="margin:0" class="small">A backup for when sync isn't set up. Copy this code on one device and paste it on another. Codes combine: finished lessons and best scores from both are kept.<br><span class="muted">没有设置同步时的备用办法：在一台设备上复制进度码，粘贴到另一台。</span></p>
+    <div class="field"><span>This device's code</span><textarea class="code" id="mvOut" readonly></textarea></div>
+    <div class="row"><button class="btn primary" id="mvCopy" type="button">Copy code 复制</button><span class="small muted" id="mvCopied" aria-live="polite"></span></div>
+    <div class="field"><span>Paste a code from another device</span><textarea class="code" id="mvIn" placeholder="VANPIANO-…"></textarea></div>
+    <div class="row"><button class="btn" id="mvGo" type="button">Add this progress 加入</button><button class="btn quiet" id="mvClose" type="button">Close 关闭</button></div>
+    <div class="pstat" id="mvMsg" aria-live="polite"></div>
+  </div></div>`);
+  document.body.appendChild(veil);
+  $("#mvOut",veil).value=exportCode();
+  const close=()=>{veil.remove();refreshAll()};
+  $("#mvClose",veil).onclick=close; veil.addEventListener("click",e=>{if(e.target===veil)close()});
+  $("#mvCopy",veil).onclick=async()=>{ const t=$("#mvOut",veil); try{ await navigator.clipboard.writeText(t.value); $("#mvCopied",veil).textContent="Copied. Now paste it on the other device."; }catch(e){ t.focus(); t.select(); $("#mvCopied",veil).textContent="Select all the text above and copy it."; } };
+  $("#mvGo",veil).onclick=()=>{ const m=$("#mvMsg",veil); try{ const ch=importCode($("#mvIn",veil).value); m.className="pstat good"; m.textContent=ch?"Done. Progress combined. 已合并。":"Nothing new in that code; this device is already up to date."; $("#mvOut",veil).value=exportCode(); }catch(e){ m.className="pstat bad"; m.textContent=e.message; } };
+}
+
+/* ---------- automatic sync through the family's own GitHub repository ---------- */
+const SYNC_OK=MIC_OK||(()=>{try{return window.self===window.top}catch(e){return false}})();
+const Sync={cfg:lsGet("vp.sync",null),sha:null,busy:false,again:false,last:0,err:"",timer:0};
+const b64e=str=>btoa(unescape(encodeURIComponent(str)));
+const b64d=b=>decodeURIComponent(escape(atob(String(b).replace(/\s/g,""))));
+function ghFetch(path,method,body,cfg){
+  cfg=cfg||Sync.cfg;
+  return fetch(`https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}${path}`,{method:method||"GET",cache:"no-store",
+    headers:{Authorization:"Bearer "+cfg.token,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28",...(body?{"Content-Type":"application/json"}:{})},
+    body:body?JSON.stringify(body):undefined});
+}
+function syncSoon(){ if(!Sync.cfg||S.mode!=="local") return; clearTimeout(Sync.timer); Sync.timer=setTimeout(syncNow,2000); }
+function syncError(e){
+  const st=e&&e.status;
+  if(st===401) return "GitHub didn't accept the access token. It may have expired. Open Sync devices and paste a new one.";
+  if(st===403||st===404) return "The token can't reach the progress repository. Open Sync devices and check the repository name and the token's permissions.";
+  return "Can't reach GitHub right now. Progress is safe on this device and will sync when the connection is back.";
+}
+async function syncNow(){
+  if(!Sync.cfg||S.mode!=="local") return;
+  if(Sync.busy){ Sync.again=true; return; }
+  Sync.busy=true; let changed=false;
+  try{
+    const r=await ghFetch(`/contents/progress.json?t=${Date.now()}`);
+    let remote={};
+    if(r.status===404){ Sync.sha=null; }
+    else if(!r.ok) throw r;
+    else { const j=await r.json(); Sync.sha=j.sha; try{ const d=JSON.parse(b64d(j.content)); if(d&&isPlain(d.learners)) remote=d.learners; }catch(e){} }
+    const remoteClean={};
+    for(const [id,v] of Object.entries(remote)){
+      if(!/^[A-Za-z0-9_.~:@+-]{1,60}$/.test(id)||id!==ID) continue;
+      const inc=cleanLearner(v); remoteClean[id]=inc;
+      const cur=S.learners[id];
+      if(!cur){ S.learners[id]=inc; changed=true; }
+      else { const m=mergeLearner(cur,inc); m.last=cur.last; if(stable(forSync(m))!==stable(forSync(cur))){ S.learners[id]=m; changed=true; } }
+    }
+    const localView={}; for(const id in S.learners) localView[id]=forSync(S.learners[id]);
+    const remoteView={}; for(const id in remoteClean) remoteView[id]=forSync(remoteClean[id]);
+    if(stable(localView)!==stable(remoteView)){
+      const body={message:"Update Van's piano progress",content:b64e(JSON.stringify({v:1,learners:localView},null,1))};
+      if(Sync.sha) body.sha=Sync.sha;
+      const w=await ghFetch("/contents/progress.json","PUT",body);
+      if(w.status===409||w.status===422) Sync.again=true;
+      else if(!w.ok) throw w;
+      else { const j=await w.json(); Sync.sha=j.content&&j.content.sha; }
+    }
+    Sync.last=Date.now(); Sync.err="";
+  }catch(e){ Sync.err=syncError(e); }
+  Sync.busy=false;
+  if(changed){ lsSet("vp.local",S.learners); }
+  if(changed&&currentView==="home") refreshAll(); else refreshChrome();
+  if(Sync.again){ Sync.again=false; setTimeout(syncNow,1200); }
+}
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") syncNow(); });
+setInterval(()=>{ if(document.visibilityState==="visible") syncNow(); },60000);
+const ago=t=>{ const s=(Date.now()-t)/1000; return s<45?"just now":s<3600?Math.round(s/60)+" min ago":Math.round(s/3600)+" h ago"; };
+function openSyncSheet(){
+  const c=Sync.cfg||{};
+  let owner=c.owner||""; try{ const h=location.hostname; if(!owner&&h.endsWith(".github.io")) owner=h.replace(".github.io",""); }catch(e){}
+  const veil=el(`<div class="veil" role="dialog" aria-modal="true" aria-label="Sync devices"><div class="sheet">
+    <h2>Sync devices <span class="zh">同步设备</span></h2>
+    ${Sync.cfg?`<p style="margin:0">This device is connected. Progress syncs on its own whenever something changes and whenever you open the app.</p>
+      <div class="pstat ${Sync.err?"bad":"good"}" id="syMsg">${Sync.err?esc(Sync.err):Sync.last?"Last synced "+ago(Sync.last)+".":"Syncing…"}</div>
+      <div class="row"><button class="btn primary" id="syNow" type="button">Sync now</button><button class="btn" id="syEdit" type="button">Change token</button><button class="btn quiet" id="syOff" type="button">Disconnect this device</button></div>`:
+     `<p style="margin:0" class="small">Connect each device once. After that, progress moves between all your devices by itself. You need the access token you made on GitHub; keep it private.</p>`}
+    <div class="stack" id="syForm" style="gap:12px" ${Sync.cfg?"hidden":""}>
+      <label class="field"><span>GitHub username</span><input type="text" id="syOwner" value="${esc(owner)}" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+      <label class="field"><span>Progress repository</span><input type="text" id="syRepo" value="${esc(c.repo||"van-piano-progress")}" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+      <label class="field"><span>Access token</span><input type="text" id="syToken" value="" placeholder="github_pat_…" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+      <div class="row"><button class="btn primary" id="syGo" type="button">Connect</button></div>
+      <div class="pstat" id="syFormMsg" aria-live="polite"></div>
+    </div>
+    <div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn quiet" id="syCodes" type="button">Use a progress code instead</button><button class="btn quiet" id="syClose" type="button">Close</button></div>
+  </div></div>`);
+  document.body.appendChild(veil);
+  const close=()=>{veil.remove();refreshAll()};
+  $("#syClose",veil).onclick=close; veil.addEventListener("click",e=>{if(e.target===veil)close()});
+  $("#syCodes",veil).onclick=()=>{veil.remove();openMoveSheet()};
+  if($("#syNow",veil)) $("#syNow",veil).onclick=async()=>{ $("#syMsg",veil).className="pstat"; $("#syMsg",veil).textContent="Syncing…"; await syncNow(); $("#syMsg",veil).className="pstat "+(Sync.err?"bad":"good"); $("#syMsg",veil).textContent=Sync.err||"Last synced just now."; };
+  if($("#syEdit",veil)) $("#syEdit",veil).onclick=()=>{ $("#syForm",veil).hidden=false; $("#syToken",veil).focus(); };
+  if($("#syOff",veil)) $("#syOff",veil).onclick=()=>{ Sync.cfg=null; lsSet("vp.sync",null); close(); };
+  $("#syGo",veil).onclick=async()=>{
+    const cfg={owner:$("#syOwner",veil).value.trim(),repo:$("#syRepo",veil).value.trim(),token:$("#syToken",veil).value.trim()};
+    const m=$("#syFormMsg",veil);
+    if(!cfg.owner||!cfg.repo||!cfg.token){ m.className="pstat bad"; m.textContent="Fill in all three boxes."; return; }
+    m.className="pstat"; m.textContent="Checking…";
+    try{
+      const r=await ghFetch("",undefined,undefined,cfg);
+      if(r.status===401){ m.className="pstat bad"; m.textContent="GitHub didn't accept that token. Copy it again, including the github_pat_ at the start."; return; }
+      if(!r.ok){ m.className="pstat bad"; m.textContent=`Couldn't find ${cfg.owner}/${cfg.repo} with that token. Check the spelling, and that the token was given access to this repository.`; return; }
+      const j=await r.json();
+      if(j.permissions&&j.permissions.push===false){ m.className="pstat bad"; m.textContent="The token can read the repository but can't save to it. Give it Contents: Read and write."; return; }
+    }catch(e){ m.className="pstat bad"; m.textContent="Can't reach GitHub. Check the internet connection and try again."; return; }
+    Sync.cfg=cfg; lsSet("vp.sync",cfg); m.className="pstat good"; m.textContent="Connected. Syncing…";
+    await syncNow();
+    ensureVan();
+    close();
+  };
+}
+/* ---------- keyboard component ---------- */
+function makeKeyboard(host,o){
+  const from=midiOf(o.from||"C3"), to=midiOf(o.to||"C6");
+  const wrap=el('<div class="kbwrap"></div>'), kb=el('<div class="kb" role="group" aria-label="Piano keyboard"></div>');
+  wrap.appendChild(kb); host.appendChild(wrap);
+  const keys={}; let wi=0;
+  for(let m=from;m<=to;m++){
+    if(isBlack(m)) continue;
+    const k=el(`<div class="key white" data-m="${m}"><span class="fg"></span><span class="lb"></span></div>`);
+    k.style.left=`calc(var(--wk) * ${wi})`; if(m===60) k.classList.add("mid");
+    keys[m]=k; kb.appendChild(k);
+    if(m+1<=to&&isBlack(m+1)){
+      const b=el(`<div class="key black" data-m="${m+1}"><span class="fg"></span><span class="lb"></span></div>`);
+      b.style.left=`calc(var(--wk) * ${wi+1} - var(--bw) / 2)`; keys[m+1]=b; kb.appendChild(b);
+    }
+    wi++;
+  }
+  kb.style.setProperty("--nw",wi);
+  const size=()=>{ const w=wrap.clientWidth||600; const wk=clamp(w/wi,30,62); kb.style.setProperty("--wk",wk+"px"); kb.style.setProperty("--bw",(wk*0.6)+"px"); kb.style.setProperty("--kh",clamp(wk*3.7,120,215)+"px"); };
+  size(); const ro=new ResizeObserver(size); ro.observe(wrap); DISPOSE.push(()=>ro.disconnect());
+  const api={el:wrap,keys,
+    setLabels(mode,blackToo){ kb.classList.toggle("nolabels",mode==="none"); Object.entries(keys).forEach(([m,k])=>{ m=+m; let t=""; if(mode==="num") t=jnKeyHTML(m,api.key,blackToo); else if(isBlack(m)){ if(blackToo) t=esc(nameOfMidi(m));} else if(mode==="all"||mode==="letters") t=nameOfMidi(m); else if(mode==="c"&&m%12===0) t="C"; k.querySelector(".lb").innerHTML=t; }); },
+    setFingers(map){ Object.values(keys).forEach(k=>{k.classList.remove("hasfg");k.querySelector(".fg").textContent=""}); for(const m in (map||{})){ const k=keys[m]; if(k){k.classList.add("hasfg");k.querySelector(".fg").textContent=map[m];} } },
+    mark(list,cls){ $$("."+cls,kb).forEach(k=>k.classList.remove(cls)); (list||[]).forEach(m=>keys[m]&&keys[m].classList.add(cls)); },
+    flash(m,cls){ const k=keys[m]; if(!k) return; k.classList.add(cls); setTimeout(()=>k.classList.remove(cls),450); },
+    center(m){ const k=keys[m]; if(!k) return; requestAnimationFrame(()=>{ wrap.scrollLeft=Math.max(0,k.offsetLeft-wrap.clientWidth/2+k.offsetWidth/2); }); }
+  };
+  api.key=o.key||"C"; api.setLabels(o.labels||"num",o.blackLabels);
+  const down=new Map();
+  kb.addEventListener("pointerdown",e=>{
+    const k=e.target.closest(".key"); if(!k) return;
+    const m=+k.dataset.m; k.classList.add("down");
+    const v=playNote(m); down.set(e.pointerId,{k,v,t:performance.now()});
+    o.onPress&&o.onPress(m);
+  });
+  const up=e=>{ const d=down.get(e.pointerId); if(!d) return; d.k.classList.remove("down"); d.v.release(); down.delete(e.pointerId); };
+  ["pointerup","pointercancel","lostpointercapture"].forEach(ev=>kb.addEventListener(ev,up));
+  kb.addEventListener("contextmenu",e=>e.preventDefault());
+  if(o.centerOn) api.center(midiOf(o.centerOn));
+  return api;
+}
+function playSeq(kb,str,tempo=96){
+  const items=parseLine(str), c=audio(); if(!c) return;
+  const spb=60/tempo; let t=c.currentTime+0.08, offs=0;
+  items.forEach(it=>{
+    const ns=(Array.isArray(it.n)?it.n:[it.n]).map(midiOf);
+    ns.forEach(m=>playNote(m,{when:t+offs*spb,dur:it.d*spb*0.92}));
+    const startMs=offs*spb*1000+80, endMs=(offs+it.d)*spb*1000+40;
+    setTimeout(()=>ns.forEach(m=>kb.keys[m]&&kb.keys[m].classList.add("play")),startMs);
+    setTimeout(()=>ns.forEach(m=>kb.keys[m]&&kb.keys[m].classList.remove("play")),endMs);
+    offs+=it.d;
+  });
+}
+/* ---------- staff (notation drawn as SVG) ---------- */
+function staffSVG(o){
+  const bpb=o.bpb||4, key=o.key||"", ks=key==="G"||key==="F";
+  const unit=o.unit||(o.mode==="even"?58:46), left=(o.timeSig?84:62)+(ks?16:0), blockH=136;
+  const parts=o.parts.map(p=>{ let b=0; const ev=p.notes.map(nt=>{ const e={...nt,beat:b}; b+=o.mode==="even"?1:nt.d; return e; }); return {...p,ev,total:b}; });
+  const total=Math.max(...parts.map(p=>p.total));
+  const W=Math.ceil(left+total*unit+24), H=parts.length*blockH;
+  const xOf=b=>left+b*unit+unit*0.45;
+  let s=`<svg class="staff" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(o.aria||"Music notation")}">`;
+  parts.forEach((p,pi)=>{
+    const top=pi*blockH+34, bot=top+40, mid=top+20, base=p.clef==="bass"?18:30;
+    const yOf=step=>bot-(step-base)*5;
+    for(let i=0;i<5;i++) s+=`<line class="ln" x1="8" x2="${W-8}" y1="${top+i*10}" y2="${top+i*10}"/>`;
+    s+=`<line class="bl" x1="8" x2="8" y1="${top}" y2="${bot}"/>`;
+    if(p.clef==="bass") s+=`<text class="clef" x="14" y="${top+10}" font-size="40">𝄢</text>`;
+    else s+=`<text class="clef" x="12" y="${top+30}" font-size="42">𝄞</text>`;
+    if(key==="G") s+=`<text class="acc" x="46" y="${(p.clef==="bass"?bot-30:top)+7}">♯</text>`;
+    if(key==="F") s+=`<text class="acc" x="47" y="${(p.clef==="bass"?bot-10:mid)+5}">♭</text>`;
+    const tsx=ks?70:54;
+    if(o.timeSig) s+=`<text class="ts" x="${tsx}" y="${top+18}">${bpb}</text><text class="ts" x="${tsx}" y="${top+38}">4</text>`;
+    if(o.mode!=="even"){
+      for(let b=bpb;b<p.total;b+=bpb) s+=`<line class="bl" x1="${left+b*unit-4}" x2="${left+b*unit-4}" y1="${top}" y2="${bot}"/>`;
+      const ex=left+p.total*unit-2; s+=`<line class="bl" x1="${ex-7}" x2="${ex-7}" y1="${top}" y2="${bot}"/><line class="bl2" x1="${ex}" x2="${ex}" y1="${top}" y2="${bot}"/>`;
+    } else s+=`<line class="bl" x1="${W-8}" x2="${W-8}" y1="${top}" y2="${bot}"/>`;
+    if(p.name&&parts.length>1) s+=`<text class="tag" x="12" y="${top-20}">${esc(p.name)}</text>`;
+    let tieFrom=null;
+    p.ev.forEach((e,i)=>{
+      const x=xOf(e.beat), d=o.mode==="even"?4:e.d;
+      let g=`<g class="nt" data-p="${pi}" data-i="${i}">`;
+      if(e.n==null){ // rest
+        if(d>=4) g+=`<rect class="rest" x="${x-6}" y="${top+10}" width="12" height="5"/>`;
+        else if(d>=2) g+=`<rect class="rest" x="${x-6}" y="${mid-5}" width="12" height="5"/>${d===3?`<circle class="dt" cx="${x+11}" cy="${mid-6}" r="2"/>`:""}`;
+        else if(d>=1) g+=`<path class="rest q" d="M${x-2} ${mid-15} l6 7 l-5 6 l6 7 c-7-3-9 2-4 7 c-9-4-8-11 -1-9 l-6-7 l5-5 z"/>${d===1.5?`<circle class="dt" cx="${x+9}" cy="${mid-4}" r="2"/>`:""}`;
+        else g+=`<circle class="rest" cx="${x-3}" cy="${mid-5}" r="2.6"/><path class="rest-ln" d="M${x-3} ${mid-3} q4 1 7 -4 l-5 14"/>`;
+        g+=`</g>`; s+=g; tieFrom=null; return;
+      }
+      const ns=(Array.isArray(e.n)?e.n:[e.n]).map(parseNote);
+      const hollow=d>=2, stemmed=d<4;
+      const steps=ns.map(n=>n.step), lo=Math.min(...steps), hi=Math.max(...steps);
+      for(let st=base-2;st>=lo;st-=2) g+=`<line class="led" x1="${x-11}" x2="${x+11}" y1="${yOf(st)}" y2="${yOf(st)}"/>`;
+      for(let st=base+10;st<=hi;st+=2) g+=`<line class="led" x1="${x-11}" x2="${x+11}" y1="${yOf(st)}" y2="${yOf(st)}"/>`;
+      ns.forEach(n=>{
+        const y=yOf(n.step);
+        g+=`<ellipse class="hd${hollow?" hollow":""}" cx="${x}" cy="${y}" rx="${d>=4?7:6.2}" ry="4.4" transform="rotate(${d>=4?-12:-22} ${x} ${y})"/>`;
+        const inKey=(key==="G"&&n.L==="F"&&n.acc==="#")||(key==="F"&&n.L==="B"&&n.acc==="b");
+        if(n.acc&&!inKey) g+=`<text class="acc" x="${x-21}" y="${y+7}">${n.acc==="#"?"♯":"♭"}</text>`;
+        if(d===1.5||d===3){ const dy=((n.step-base)%2===0)?-4:0; g+=`<circle class="dt" cx="${x+11}" cy="${y+dy}" r="2"/>`; }
+      });
+      const up=((lo+hi)/2-base)<4;
+      if(stemmed){
+        const sx=up?x+5.8:x-5.8, y1=up?yOf(lo):yOf(hi), y2=up?yOf(hi)-32:yOf(lo)+32;
+        g+=`<line class="stem" x1="${sx}" x2="${sx}" y1="${y1}" y2="${y2}"/>`;
+        if(d===0.5) g+=up?`<path class="flag" d="M${sx} ${y2} c 1 8 11 10 8 20"/>`:`<path class="flag" d="M${sx} ${y2} c 1 -8 11 -10 8 -20"/>`;
+      }
+      if(tieFrom){ const y=yOf(lo), dir=up?1:-1, yy=y+dir*7; s+=`<path class="tie" d="M${tieFrom.x+7} ${yy} Q${(tieFrom.x+x)/2} ${yy+dir*9} ${x-7} ${yy}"/>`; }
+      tieFrom=e.tie?{x}:null;
+      if(o.showFingers&&e.f&&!Array.isArray(e.n)&&!e.tied) g+=`<text class="fgn" x="${x}" y="${top-12}">${e.f[0]}</text>`;
+      const label=o.labels?o.labels[i]:(e.label||(o.showNames&&!e.tied?(Array.isArray(e.n)?"":letterOf(e.n)):""));
+      if(label) g+=`<text class="nm" x="${x}" y="${bot+42}">${esc(label)}</text>`;
+      g+=`</g>`; s+=g;
+    });
+  });
+  return s+`</svg>`;
+}
+function staffNoteEl(box,pi,i){return box.querySelector(`.nt[data-p="${pi}"][data-i="${i}"]`)}
+
+/* ---------- views ---------- */
+let DISPOSE=[];
+function cleanup(){ DISPOSE.forEach(f=>{try{f()}catch(e){}}); DISPOSE=[]; }
+const app=$("#app");
+let currentView="";
+
+function refreshChrome(){
+  const st=$("#syncStatus"); if(st) st.outerHTML=statusHTML();
+  const done=$("#doneBar"); if(done&&done.dataset.lesson) renderDoneBar(done,done.dataset.lesson);
+}
+function refreshAll(){ refreshChrome(); route(); }
+function statusHTML(){
+  let cls,txt;
+  if(Sync.cfg){ if(Sync.err){cls="warn";txt=Sync.err} else {cls="ok";txt=Sync.last?"Synced with your other devices "+ago(Sync.last)+". 已同步。":"Syncing with your other devices… 正在同步……"} }
+  else {cls="warn";txt=SYNC_OK?"Progress is saved on this device only. To share it with your other devices, open Settings (⚙) and tap Sync devices. 进度只保存在这台设备上。":"Progress is saved on this device. 进度保存在这台设备上。"}
+  return `<div class="status ${cls}" id="syncStatus" role="status"><i></i>${esc(txt)}</div>`;
+}
+function route(){
+  cleanup(); stopAllPlayers();
+  const h=location.hash.slice(1);
+  $("#nav-home").classList.toggle("on",!h||h==="home"||h.startsWith("lesson-"));
+  $("#nav-play").classList.toggle("on",h==="play");
+  $("#nav-songs").classList.toggle("on",h==="songs"||h.startsWith("song-"));
+  if(h.startsWith("lesson-")&&LBYID[h.slice(7)]) showLesson(h.slice(7));
+  else if(h==="play") showPlay();
+  else if(h==="songs") showSongs();
+  else if(h.startsWith("song-")&&SONGS[h.slice(5)]) showSong(h.slice(5));
+  else showHome();
+}
+window.addEventListener("hashchange",()=>{route();window.scrollTo(0,0)});
+const zhSpan=t=>t&&zhOn()?` <span class="zh">${esc(t)}</span>`:"";
+
+function showHome(){
+  currentView="home";
+  const L=me(), doneN=LESSONS.filter(l=>isDone(L,l.id)).length, nx=nextLesson(L);
+  app.innerHTML=`<div class="stack">
+    <div class="hero"><div class="stack" style="gap:10px">
+      <h1>Van's piano${zhSpan("钢琴课")}</h1>
+      <div class="bar" aria-label="${doneN} of ${LESSONS.length} lessons complete"><span style="width:${doneN/LESSONS.length*100}%"></span></div>
+      <div class="muted small">${doneN} of ${LESSONS.length} lessons complete${zhOn()?` · 已完成 ${doneN}/${LESSONS.length} 课`:""}</div>
+    </div>
+    <div class="row">${nx?`<a class="btn primary" href="#lesson-${nx.id}">${doneN?"Continue 继续":"Start 开始"}: ${esc(zhOn()?nx.zh:nx.title)}</a>`:`<span class="chip done">All lessons complete 全部完成</span>`}</div></div>
+    ${statusHTML()}
+    ${UNITS.map((u,ui)=>`<section class="unit"><h3>${esc(u[0])}${zhOn()?" · "+esc(u[1]):""}</h3><div class="lessons">${LESSONS.filter(l=>l.unit===ui).map(l=>{
+        const n=LBYID[l.id].idx+1, d=isDone(L,l.id);
+        return `<a class="lrow${d?" done":""}${nx&&nx.id===l.id?" next":""}" href="#lesson-${l.id}"><span class="num">${d?"✓":n}</span><span><span class="t">${esc(l.title)}${zhOn()?`<span class="tz">${esc(l.zh)}</span>`:""}</span><span class="s">${esc(zhOn()?l.sumzh:l.sum)}</span></span><span class="small muted">${l.mins} min</span></a>`;}).join("")}</div></section>`).join("")}
+    <section class="card stack col"><h2>Song library${zhSpan("曲库")}</h2><p style="margin:0">${LIB.length} songs to play any time, including 送别, 茉莉花 and 友谊地久天长. Each one shows the 简谱 and works with Listen, Play along and Practice.</p><div><a class="btn" href="#songs">Open the song library 打开曲库</a></div></section>
+    <section class="card stack col"><h2>Before you start${zhSpan("开始之前")}</h2>
+      <p style="margin:0"><b>Sound:</b> tap any key once to turn the sound on. On an iPhone, turn the volume up; the app plays even with the silent switch on.${zhOn()?`<br><span class="zhp">声音：先点任意一个键打开声音。iPhone 请把音量调大，静音开关打开时也能出声。</span>`:""}</p>
+      <p style="margin:0"><b>With your piano:</b> put the iPad on the music stand. ${MIC_OK?"Turn on <b>Use my piano</b> and the app listens through the microphone, checking each note you play. Try the microphone check on the Piano page first.":"Use <b>Play along</b>: the app counts in and lights the keys so you can follow on your piano."}${zhOn()?`<br><span class="zhp">用你的钢琴：把 iPad 放在谱架上，打开“用我的钢琴”，app 会用麦克风听你弹的每个音。可以先在“钢琴”页试试麦克风。</span>`:""}</p>
+      <p style="margin:0"><b>A little every day:</b> 15 minutes a day is plenty. Repeat a lesson as often as you like before marking it complete.${zhOn()?`<br><span class="zhp">每天一点点：每天 15 分钟就够了。一课可以反复练，满意了再标记完成。</span>`:""}</p>
+    </section>
+  </div>`;
+}
+
+function showLesson(id){
+  currentView="lesson";
+  const les=LBYID[id], L=me();
+  app.innerHTML=`<article class="stack lesson">
+    <div class="lhead stack" style="gap:8px"><div class="kicker">Lesson ${les.idx+1} · ${esc(UNITS[les.unit][0])}${zhOn()?" · 第 "+(les.idx+1)+" 课":""}</div><h1>${esc(les.title)}${zhSpan(les.zh)}</h1>
+    <div class="row"><span class="small muted">About ${les.mins} minutes</span></div></div>
+    <div class="stack" id="blocks"></div>
+    <div class="endbar" id="doneBar" data-lesson="${id}"></div>
+  </article>`;
+  const host=$("#blocks");
+  les.blocks.forEach(b=>{ const n=renderBlock(b,L); if(n) host.appendChild(n); });
+  renderDoneBar($("#doneBar"),id);
+}
+function renderDoneBar(bar,id){
+  const les=LBYID[id], L=me(), d=isDone(L,id);
+  const prev=LESSONS[les.idx-1], nx=LESSONS[les.idx+1];
+  bar.innerHTML=`<div class="row">${prev?`<a class="btn quiet" href="#lesson-${prev.id}">← ${esc(zhOn()?prev.zh:prev.title)}</a>`:""}</div>
+    <div class="row">${d?`<span class="chip done">Completed 已完成</span><button class="btn quiet" id="undoDone" type="button">Mark as not done</button>`:`<button class="btn primary" id="markDone" type="button">Mark lesson complete 完成本课</button>`}
+    ${nx?`<a class="btn" href="#lesson-${nx.id}">Next 下一课: ${esc(zhOn()?nx.zh:nx.title)} →</a>`:`<a class="btn" href="#home">Back to lessons 返回</a>`}</div>`;
+  const md=$("#markDone",bar); if(md) md.onclick=()=>{ save(ID,{done:{[id]:Date.now()}}); };
+  const ud=$("#undoDone",bar); if(ud) ud.onclick=()=>{ save(ID,{done:{[id]:-Date.now()}}); };
+}
+function renderBlock(b,L){
+  const zh=b.zh&&zhOn()?b.zh:"";
+  switch(b.t){
+    case "p": return el(`<div class="pp"><p class="${b.cls||""}">${b.h}</p>${zh?`<p class="zhp" lang="zh">${zh}</p>`:""}</div>`);
+    case "tip": return el(`<div class="tip">${b.h}${zh?`<span class="zhp" lang="zh">${zh}</span>`:""}</div>`);
+    case "kb": return blockKb(b);
+    case "html": return el(`<div>${b.h}</div>`);
+    case "hands": return el(`<div class="hands">${handSVG("L",null)}${handSVG("R",null)}</div>`);
+    case "findKey": return quizFindKey(b,L);
+    case "fingers": return quizFingers(b,L);
+    case "song": return songPlayer(b,L);
+  }
+  return null;
+}
+function blockKb(b){
+  const cap=b.cap?b.cap+(b.capzh&&zhOn()?`<br><span lang="zh">${b.capzh}</span>`:""):"";
+  const n=el(`<figure class="prac" style="margin:0"><div class="kbtools"></div><div class="kbh"></div>${cap?`<figcaption class="cap" style="margin:0">${cap}</figcaption>`:""}</figure>`);
+  const kb=makeKeyboard($(".kbh",n),{from:b.from,to:b.to,labels:b.labels||prefs().labels,key:"C",centerOn:"C4"});
+  if(b.mark) kb.mark(b.mark.map(midiOf),"target");
+  if(b.fingers){ const f={}; for(const k in b.fingers) f[midiOf(k)]=b.fingers[k]; kb.setFingers(f); }
+  (b.seqs||[]).forEach(s=>{ const bt=el(`<button class="btn" type="button">${playIcon()} ${esc(s.label)}</button>`); bt.onclick=()=>playSeq(kb,s.notes,96); $(".kbtools",n).appendChild(bt); });
+  if(!b.seqs) $(".kbtools",n).remove();
+  return n;
+}
+const playIcon=()=>`<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5v11l9-5.5z" fill="currentColor"/></svg>`;
+
+function openSettings(){
+  const p=prefs(); let labels=p.labels;
+  const veil=el(`<div class="veil" role="dialog" aria-modal="true" aria-label="Settings"><div class="sheet">
+    <h2>Settings <span class="zh">设置</span></h2>
+    <div class="field"><span>Labels on the keys · 琴键标记</span><div class="seg" id="stLabels">${[["num","简谱"],["letters","C D E"],["none","None 无"]].map(([k,t])=>`<button type="button" data-v="${k}" aria-pressed="${labels===k}">${t}</button>`).join("")}</div></div>
+    <label class="tog"><input type="checkbox" id="stZh" ${p.zh?"checked":""}> Show Chinese 显示中文</label>
+    <label class="tog"><input type="checkbox" id="stStaff" ${p.staff?"checked":""}> Show staff notation under the 简谱 · 显示五线谱</label>
+    <div class="row"><button class="btn primary" id="stSave" type="button">Save 保存</button><button class="btn quiet" id="stCancel" type="button">Cancel 取消</button></div>
+    <div class="row" style="border-top:1px solid var(--line);padding-top:14px">${SYNC_OK?`<button class="btn" id="stSync" type="button">Sync devices 同步设备</button>`:""}<button class="btn quiet" id="stCode" type="button">Progress code 进度码</button></div>
+  </div></div>`);
+  document.body.appendChild(veil);
+  $$("#stLabels button",veil).forEach(b=>b.onclick=()=>{labels=b.dataset.v;$$("#stLabels button",veil).forEach(x=>x.setAttribute("aria-pressed",x===b))});
+  const close=()=>veil.remove();
+  $("#stCancel",veil).onclick=close; veil.addEventListener("click",e=>{if(e.target===veil)close()});
+  $("#stSave",veil).onclick=()=>{ save(ID,{prefs:{labels,zh:$("#stZh",veil).checked,staff:$("#stStaff",veil).checked},profileAt:Date.now()}); close(); route(); };
+  if($("#stSync",veil)) $("#stSync",veil).onclick=()=>{close();openSyncSheet()};
+  $("#stCode",veil).onclick=()=>{close();openMoveSheet()};
+}
+$("#setBtn").onclick=openSettings;
+
+/* hands */
+function handSVG(side,hi){
+  const F=[{n:1,x:22,y:92,w:26,h:52,r:-34},{n:2,x:52,y:22,w:25,h:76},{n:3,x:81,y:10,w:25,h:86},{n:4,x:110,y:20,w:24,h:78},{n:5,x:138,y:44,w:21,h:58}];
+  const mx=x=>side==="L"?180-x:x;
+  let s=`<figure><svg width="200" height="180" viewBox="-28 0 236 200" role="img" aria-label="${side==="L"?"Left":"Right"} hand with fingers numbered 1 to 5">`;
+  const palm={x:42,y:86,w:120,h:96}; s+=`<rect class="hand-skin" x="${side==="L"?180-palm.x-palm.w:palm.x}" y="${palm.y}" width="${palm.w}" height="${palm.h}" rx="36"/>`;
+  F.forEach(f=>{
+    const x=side==="L"?180-f.x-f.w:f.x, cx=x+f.w/2, r=f.r?(side==="L"?-f.r:f.r):0;
+    const tr=r?` transform="rotate(${r} ${cx} ${f.y+f.h})"`:"";
+    s+=`<g${tr}><rect class="${hi===f.n?"hand-on":"hand-skin"}" x="${x}" y="${f.y}" width="${f.w}" height="${f.h+20}" rx="${f.w/2}"/><text class="hand-num" x="${cx}" y="${f.y+24}">${f.n}</text></g>`;
+  });
+  return s+`</svg><figcaption>${side==="L"?"Left hand":"Right hand"}</figcaption></figure>`;
+}
+/* quiz helpers */
+function bestScore(L,id){return L&&L.scores?L.scores[id]:undefined}
+function recordScore(L,id,pct){ if(!L) return; const cur=S.learners[L.id]; if(!cur) return; const old=cur.scores[id]; if(old==null||pct>old) save(L.id,{scores:{[id]:pct}}); }
+function quizShell(title,L,id,intro){
+  const best=bestScore(L,id);
+  return el(`<section class="prac" aria-label="${esc(title)}"><div class="ph"><h3>${esc(title)}</h3><span class="score" data-best>${best!=null?"Your best: "+best+"%":""}</span></div>
+    <p class="muted small" style="margin:0">${intro}</p><div class="qbig" data-prompt></div><div data-area class="stack" style="gap:12px"></div>
+    <div class="row"><button class="btn primary" type="button" data-start>Start 开始</button><span class="score" data-score></span></div></section>`);
+}
+function finishQuiz(n,L,id,right,total){
+  $("[data-score]",n).textContent=`${right} of ${total} right`;
+  const pct=Math.round(right/total*100); recordScore(L,id,pct);
+  $("[data-prompt]",n).textContent=pct>=90?`${right} of ${total}. Excellent!`:pct>=60?`${right} of ${total}. Good. Try again to beat it.`:`${right} of ${total}. Keep at it; it gets easier quickly.`;
+  const b=bestScore(me(),id); $("[data-best]",n).textContent=b!=null?"Your best: "+b+"%":"";
+  $("[data-start]",n).textContent="Try again 再来"; $("[data-start]",n).hidden=false;
+}
+function quizFindKey(b,L){
+  const n=quizShell(b.title,L,b.id,b.intro||"A key name appears. Tap that key anywhere on the keyboard. Your first tap counts toward your score.");
+  const kb=makeKeyboard($("[data-area]",n),{from:b.from,to:b.to,labels:b.labels,centerOn:"C4"});
+  const pcOf=t=>(PC[t[0]]+(t[1]==="#"?1:t[1]==="b"?-1:0)+12)%12;
+  let qs=[],round=0,right=0,cur=null,first=true,active=false,lastHit=null;
+  const total=()=>qs.length;
+  const scoreLine=()=>{$("[data-score]",n).textContent=`Question ${Math.min(round+1,total())} of ${total()} · ${right} right first try`};
+  const build=()=>{
+    if(b.asks){ const [a0,...rest]=b.asks; const last=rest.filter(x=>x.notLast), mid=shuffle(rest.filter(x=>!x.notLast)); return [a0,...mid,...last]; }
+    const out=[]; let prev=null; for(let i=0;i<b.rounds;i++){ let t; do{t=b.targets[Math.random()*b.targets.length|0]}while(b.targets.length>1&&t===prev); prev=t; out.push({p:`Tap ${/^[AE]/.test(t)?"an":"a"} ${pretty(t)}`,any:t}); } return out;
+  };
+  const ok=m=>cur.n?m===midiOf(cur.n):(m%12===pcOf(cur.any)&&!(cur.notLast&&m===lastHit));
+  const ask=()=>{
+    if(round>=total()){ active=false; scoreLine(); $("[data-score]",n).textContent=`${right} of ${total()} right first try`; finishQuiz(n,L,b.id,right,total()); return; }
+    cur=qs[round]; first=true; $("[data-prompt]",n).textContent=cur.p; scoreLine();
+  };
+  const handle=(m,fromMic)=>{
+    if(!active) return;
+    if(fromMic){ const want=cur.n?midiOf(cur.n)%12:pcOf(cur.any);
+      if(m%12===want&&!(cur.notLast&&m===lastHit)){ if(cur.n) m=midiOf(cur.n); else if(!kb.keys[m]){ const kk=Object.values(kb.keys).find(x=>(+x.dataset.m)%12===want); if(kk) m=+kk.dataset.m; } } }
+    const k=kb.keys[m];
+    if(!k){ $("[data-prompt]",n).textContent=`Heard ${jnText(m,"C")}. ${cur.p}.`; first=false; return; }
+    if(ok(m)){
+      if(first) right++; round++; lastHit=m; active=false;
+      k.classList.add("good"); $("[data-prompt]",n).textContent=first?"Yes, that's it!":"Got it.";
+      setTimeout(()=>{k.classList.remove("good"); active=true; ask();},800);
+    } else {
+      kb.flash(m,"bad"); first=false;
+      const nm=jnText(m,"C");
+      let hint;
+      if(cur.notLast&&m===lastHit) hint="That's the same C as before. Find another one.";
+      else if(cur.n&&m%12===midiOf(cur.n)%12) hint=`That's a 1, but not the one asked for. ${cur.p}.`;
+      else hint=`That's ${nm}. ${cur.p}${cur.any==="C"||(cur.n&&cur.n[0]==="C")?" (just left of two black keys)":""}.`;
+      $("[data-prompt]",n).textContent=hint;
+    }
+  };
+  $(".kb",n).addEventListener("pointerdown",e=>{ const k=e.target.closest(".key"); if(k) handle(+k.dataset.m,false); });
+  DISPOSE.push(micListen(m=>handle(m,true)));
+  const mc=micControls(n,$("[data-prompt]",n)); if(mc){ $("[data-start]",n).parentElement.appendChild(mc.btn); $("[data-area]",n).prepend(mc.heard); }
+  $("[data-start]",n).onclick=()=>{qs=build();round=0;right=0;lastHit=null;active=true;$("[data-start]",n).hidden=true;ask()};
+  return n;
+}
+function quizFingers(b,L){
+  const n=quizShell(b.title,L,b.id,"One finger lights up. Tap its number.");
+  const area=$("[data-area]",n), hands=el(`<div class="hands"></div>`), ans=el(`<div class="answers" style="justify-content:center"></div>`);
+  area.append(hands,ans); hands.innerHTML=handSVG("L",null)+handSVG("R",null);
+  [1,2,3,4,5].forEach(k=>{const bt=el(`<button type="button" disabled>${k}</button>`);bt.onclick=()=>pick(k,bt);ans.appendChild(bt)});
+  let round=0,right=0,cur=null,lock=false;
+  const ask=()=>{ if(round>=b.rounds){finishQuiz(n,L,b.id,right,b.rounds);$$("button",ans).forEach(x=>x.disabled=true);return}
+    const side=Math.random()<.5?"L":"R", f=1+(Math.random()*5|0); cur=f; lock=false;
+    hands.innerHTML=side==="L"?handSVG("L",f)+handSVG("R",null):handSVG("L",null)+handSVG("R",f);
+    $$(".hand-num",hands).forEach(t=>t.style.opacity="0");
+    $("[data-prompt]",n).textContent=`Which ${side==="L"?"left":"right"}-hand finger? ${side==="L"?"左手":"右手"}哪个手指？`; $("[data-score]",n).textContent=`${round+1} of ${b.rounds} · ${right} right`;
+    $$("button",ans).forEach(x=>{x.className="";x.disabled=false}); };
+  const pick=(k,bt)=>{ if(lock) return; lock=true; const ok=k===cur; if(ok){right++;bt.className="good"} else {bt.className="bad";$$("button",ans)[cur-1].className="good"}
+    $$(".hand-num",hands).forEach(t=>t.style.opacity="1"); $("[data-prompt]",n).textContent=ok?"Right!":`That's finger ${cur}.`; round++; setTimeout(ask,ok?700:1300); };
+  $("[data-start]",n).onclick=()=>{round=0;right=0;$("[data-start]",n).hidden=true;ask()};
+  return n;
+}
+
+/* ---------- 简谱 rendering ---------- */
+function jpBars(notes,bpb){
+  const bars=[]; let cur=[],acc=0;
+  notes.forEach((nt,i)=>{ cur.push({nt,i,pos:acc}); acc+=nt.d; if(acc>=bpb-1e-6){ bars.push(cur); cur=[]; acc=0; } });
+  if(cur.length) bars.push(cur);
+  return bars;
+}
+const near=(a,b)=>Math.abs(a-b)<1e-6;
+function jpNote(nt,pi,i,pos,key,u){
+  const at=`data-p="${pi}" data-i="${i}"`, d=nt.d, rest=nt.n==null, tied=!!nt.tied;
+  let up=0,dn=0,acc="",sym="0";
+  if(!rest){ const j=jn(midiOf(Array.isArray(nt.n)?nt.n[0]:nt.n),key); acc=j.acc; sym=String(j.d); up=Math.max(0,j.oct); dn=Math.max(0,-j.oct); }
+  const cell=(w,s,o={})=>`<span class="jn nt${o.dash?" dash":""}${o.gs?" gs":""}${o.ge?" ge":""}" ${at} style="width:${w}px;font-size:${w<30?17:22}px"><span class="jo">${"•".repeat(o.up||0)}</span><span class="jv${o.ul?" u"+o.ul:""}">${o.acc?`<sup>${o.acc}</sup>`:""}${s}${o.dot?'<b class="jdot">·</b>':""}</span><span class="jo">${"•".repeat(o.dn||0)}</span></span>`;
+  const main=(w,x={})=>tied?cell(w,"–",{dash:true,ul:x.ul,gs:x.gs,ge:x.ge}):cell(w,sym,{up,dn,acc,...x});
+  const more=w=>rest?cell(w,"0"):cell(w,"–",{dash:true});
+  let h="";
+  if(d>=1&&near(d,Math.round(d))){ h+=main(u); for(let k=1;k<Math.round(d);k++) h+=more(u); }
+  else if(near(d,1.5)) h+=main(1.5*u,{dot:true});
+  else if(d<1){ h+=main(d*u,{ul:d<=0.26?2:1,dot:near(d,0.75),gs:near(pos,Math.round(pos)),ge:near(pos+d,Math.round(pos+d))}); }
+  else { const wh=Math.floor(d); h+=main(u); for(let k=1;k<wh;k++) h+=more(u); h+=more((d-wh)*u); }
+  return h;
+}
+function jianpuHTML(o){
+  const {parts,key,bpb,multi}=o, tagW=multi?26:0;
+  let u=parts.some(p=>p.notes.some(x=>x.d<1))?44:40;
+  const avail=(o.width||700)-18-tagW;
+  let bpr=clamp(Math.floor(avail/(bpb*u+11)),1,4);
+  if(bpr<2){ const u2=Math.floor((avail-22)/(2*bpb)); if(u2>=28){ bpr=2; u=Math.min(u,u2); } else { bpr=1; u=clamp(Math.floor((avail-11)/bpb),24,u); } }
+  const barsBy=parts.map(p=>jpBars(p.notes,bpb)), nb=Math.max(...barsBy.map(x=>x.length));
+  let h=`<div class="jhead">1=${esc(key)} &nbsp;${bpb}/4</div>`;
+  for(let s=0;s<nb;s+=bpr){
+    h+=`<div class="jsys">`;
+    parts.forEach((p,pi)=>{
+      h+=`<div class="jrow">${multi?`<span class="jtag" style="width:${tagW}px">${pi===0?"右":"左"}</span>`:""}`;
+      for(let bi=s;bi<Math.min(nb,s+bpr);bi++){
+        const bar=barsBy[pi][bi]||[];
+        h+=`<span class="jbar${bi===s?" first":""}${bi===nb-1?" end":""}" data-bar="${bi+1}">${pi===0?`<span class="jbn">${bi+1}</span>`:""}${bar.map(({nt,i,pos})=>jpNote(nt,pi,i,pos,key,u)).join("")}</span>`;
+      }
+      h+=`</div>`;
+    });
+    h+=`</div>`;
+  }
+  return h;
+}
+
+/* ---------- song player ---------- */
+const PLAYERS=new Set();
+function stopAllPlayers(){PLAYERS.forEach(p=>p.stop());PLAYERS.clear()}
+function songPlayer(b,L){
+  const song=SONGS[b.song], parts=song.parts, multi=parts.length>1, key=song.key||"C", bpb=song.bpb||4;
+  let your=b.part!=null?String(b.part):(multi?"all":"0");
+  const tempos=lsGet("vp.tempo",{})||{};
+  let tempo=clamp(+tempos[b.song]||song.tempo,40,132);
+  const total=Math.max(...parts.map(p=>p.notes.reduce((a,x)=>a+x.d,0)));
+  const nBars=Math.round(total/bpb);
+  let r0=1,r1=nBars; if(b.bars){ r0=clamp(b.bars[0],1,nBars); r1=clamp(b.bars[1],r0,nBars); }
+  const uid=Math.random().toString(36).slice(2,7);
+  const opts=sel=>Array.from({length:nBars},(_,k)=>`<option value="${k+1}"${k+1===sel?" selected":""}>${k+1}</option>`).join("");
+  const n=el(`<section class="prac" aria-label="${esc(song.title)}">
+    <div class="ph"><h3>${esc(song.zh||song.title)}${song.zh?` <span class="zh">${esc(song.title)}</span>`:""}</h3><span class="small muted">${esc(song.note)}</span></div>
+    <div class="row">${multi?`<div class="seg" data-part role="group" aria-label="Your part">${parts.map((p,i)=>`<button type="button" data-v="${i}" aria-pressed="${your===String(i)}">${esc(p.name)} ${esc(p.zh||"")}</button>`).join("")}<button type="button" data-v="all" aria-pressed="${your==="all"}">Both 双手</button></div>`:""}
+      <label class="tempo" for="tp-${uid}">Speed 速度 <input type="range" id="tp-${uid}" min="40" max="132" step="4" value="${tempo}"><output>${tempo} bpm</output></label></div>
+    <div class="row"><span class="tog">Bars 小节 <select data-r0 aria-label="From bar">${opts(r0)}</select> to <select data-r1 aria-label="To bar">${opts(r1)}</select></span>
+      <label class="tog"><input type="checkbox" data-loop> Loop 循环</label>
+      <label class="tog"><input type="checkbox" data-up> Speed up 渐快</label>
+      <label class="tog"><input type="checkbox" data-staffon ${prefs().staff?"checked":""}> Staff 五线谱</label></div>
+    <div class="row"><button class="btn" type="button" data-listen>${playIcon()} Listen 听</button><button class="btn" type="button" data-along>Play along 跟弹</button><button class="btn primary" type="button" data-prac>Practice 练习</button><button class="btn quiet" type="button" data-stop hidden>Stop 停</button><button class="btn" type="button" data-skip hidden>Next note 下一个</button><span data-micslot></span></div>
+    <div data-heardslot></div>
+    <div class="pstat" data-msg aria-live="polite">Listen first, then Practice: the app waits for you to play the lit key. 先听，再练习：app 会等你弹亮起的键。</div>
+    <div class="jpbox" data-jp></div>
+    <div class="staffbox" data-staff ${prefs().staff?"":"hidden"}></div><div data-kb></div></section>`);
+  const tid=$("input[type=range]",n), out=tid.nextElementSibling;
+  const msg=$("[data-msg]",n), box=$("[data-staff]",n), jp=$("[data-jp]",n);
+  const mc=micControls(n,msg,key); if(mc){ $("[data-micslot]",n).replaceWith(mc.btn); $("[data-heardslot]",n).replaceWith(mc.heard); } else { $("[data-micslot]",n).remove(); $("[data-heardslot]",n).remove(); }
+  const hasQuick=parts.some(p=>p.notes.some(x=>x.d<1));
+  const drawStaff=()=>{ if(box.hidden) return; box.innerHTML=staffSVG({parts,mode:"time",timeSig:true,bpb,key:song.key,unit:hasQuick?58:46,showNames:false,showFingers:true,aria:song.title+" notation"}); };
+  drawStaff();
+  const sel0=$("[data-r0]",n), sel1=$("[data-r1]",n), loopOn=()=>$("[data-loop]",n).checked, upOn=()=>$("[data-up]",n).checked;
+  const rng=()=>{ let a=+sel0.value, z=+sel1.value; if(z<a){ z=a; sel1.value=z; } return [(a-1)*bpb,Math.min(total,z*bpb)]; };
+  const dim=()=>{ const a=+sel0.value, z=Math.max(a,+sel1.value); $$(".jbar",jp).forEach(x=>x.classList.toggle("out",+x.dataset.bar<a||+x.dataset.bar>z)); };
+  let lastW=0;
+  const drawJp=()=>{ const w=jp.clientWidth; if(!w||Math.abs(w-lastW)<4) return; lastW=w; jp.innerHTML=jianpuHTML({parts,key,bpb,multi,width:w}); dim(); };
+  const ro=new ResizeObserver(drawJp); ro.observe(jp); DISPOSE.push(()=>ro.disconnect());
+  jp.innerHTML=jianpuHTML({parts,key,bpb,multi,width:700}); dim();
+  const all=[]; parts.forEach((p,pi)=>{let bt=0,prev=null;p.notes.forEach((nt,i)=>{ if(nt.n!=null){ if(nt.tied&&prev){ prev.d+=nt.d; } else { prev={pi,i,beat:bt,d:nt.d,ms:(Array.isArray(nt.n)?nt.n:[nt.n]).map(midiOf),f:nt.f}; all.push(prev); } } else prev=null; bt+=nt.d; })});
+  const inR=(e,R)=>e.beat>=R[0]-1e-6&&e.beat<R[1]-1e-6;
+  const ms=all.flatMap(e=>e.ms), lo=Math.min(...ms), hi=Math.max(...ms);
+  let from=lo-(lo%12), to=hi%12===0?hi:hi-(hi%12)+12; if(to-from<19) to=from+24; if(from>48&&lo-from<3) from-=12;
+  const toName=m=>{const nm=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"][m%12];return nm.replace("#","")+(Math.floor(m/12)-1)};
+  let prac=null, run=null;
+  const kb=makeKeyboard($("[data-kb]",n),{from:toName(from),to:toName(to),labels:prefs().labels,key,centerOn:"C4",onPress:m=>{ if(prac) prac.press(m); }});
+  const mine=e=>your==="all"||e.pi===+your;
+  const setNow=(evs,cls)=>{ $$(".nt."+cls,n).forEach(g=>g.classList.remove(cls)); evs.forEach(e=>$$(`.nt[data-p="${e.pi}"][data-i="${e.i}"]`,n).forEach(g=>g.classList.add(cls))); };
+  const scrollTo=e=>{ if(box.hidden) return; const g=staffNoteEl(box,e.pi,e.i); if(!g) return; const x=g.getBBox?g.getBBox().x:0; if(x<box.scrollLeft+40||x>box.scrollLeft+box.clientWidth-80) box.scrollLeft=Math.max(0,x-80); };
+  const fingersOf=evs=>{ const fm={}; evs.forEach(e=>{ if(e.f) e.ms.forEach((m,j)=>fm[m]=e.f[j]??e.f[0]); }); return fm; };
+  const want=evs=>evs.flatMap(e=>e.ms.map((mm,j)=>`${jnText(mm,key)}${e.f?` (finger ${e.f[j]??e.f[0]})`:""}`)).join(" + ");
+  if(multi) $$("[data-part] button",n).forEach(bt=>bt.onclick=()=>{ if(prac||run) stop(); your=bt.dataset.v; $$("[data-part] button",n).forEach(x=>x.setAttribute("aria-pressed",x===bt)); });
+  const setTempoUI=()=>{ tid.value=tempo; out.textContent=tempo+" bpm"; tempos[b.song]=tempo; lsSet("vp.tempo",tempos); };
+  tid.oninput=()=>{ tempo=+tid.value; out.textContent=tempo+" bpm"; };
+  tid.onchange=()=>setTempoUI();
+  [sel0,sel1].forEach(s=>s.onchange=()=>{ stop(); rng(); dim(); msg.className="pstat"; msg.textContent=`Bars ${sel0.value}–${sel1.value} selected. 已选第 ${sel0.value}–${sel1.value} 小节。`; });
+  $("[data-staffon]",n).onchange=e=>{ box.hidden=!e.target.checked; drawStaff(); save(ID,{prefs:{staff:e.target.checked},profileAt:Date.now()}); };
+  jp.addEventListener("click",e=>{ const g=e.target.closest(".jn"); if(!g||g.classList.contains("dash")) return; const nt=parts[+g.dataset.p].notes[+g.dataset.i]; if(!nt||nt.n==null) return; (Array.isArray(nt.n)?nt.n:[nt.n]).forEach(x=>{ playNote(midiOf(x),{dur:.8}); kb.flash(midiOf(x),"play"); }); });
+  const ui=active=>{ $("[data-stop]",n).hidden=!active; $("[data-listen]",n).hidden=active; $("[data-along]",n).hidden=active; $("[data-prac]",n).hidden=active; $("[data-skip]",n).hidden=!(active&&prac); };
+  function stop(){
+    if(run){ cancelAnimationFrame(run.raf); killBus(run.bus); run=null; }
+    prac=null; kb.mark([],"play"); kb.mark([],"target"); kb.setFingers({}); setNow([],"now"); setNow([],"tgt"); ui(false);
+  }
+  const player={stop}; PLAYERS.add(player); DISPOSE.push(stop);
+  function timed(mode){
+    stop(); const c=audio(); if(!c) return;
+    const R=rng(), bus=newBus(); let loopN=1;
+    run={bus,raf:0,t0:0,spb:60/tempo,len:R[1]-R[0],nextT:0};
+    const pass=first=>{
+      const spb=60/tempo, len=R[1]-R[0], countIn=(mode==="along"&&first)?bpb:0;
+      const start=first?c.currentTime+0.2:Math.max(run.nextT,c.currentTime+0.03), t0=start+countIn*spb;
+      for(let k=0;k<countIn;k++) click(start+k*spb,k===0,bus);
+      if(mode==="along") for(let bt=0;bt<len;bt++) click(t0+bt*spb,(R[0]+bt)%bpb===0,bus);
+      all.forEach(e=>{ if(!inR(e,R)||(mode==="along"&&mine(e))) return; const dd=Math.min(e.d,R[1]-e.beat); e.ms.forEach(m=>playNote(m,{when:t0+(e.beat-R[0])*spb,dur:dd*spb*0.94,dest:bus})); });
+      Object.assign(run,{t0,spb,len,nextT:t0+len*spb});
+    };
+    pass(true); ui(true);
+    msg.className="pstat"; msg.textContent=mode==="along"?"Count-in… then play the lit keys. 预备……":"Listening… 播放中……";
+    let lastKey="";
+    const tick=()=>{ if(!run) return;
+      let rel=(c.currentTime-run.t0)/run.spb;
+      if(rel>=run.len){
+        if(!loopOn()){ stop(); msg.textContent=mode==="along"?"Nice. Try it a little faster, or switch hands. 很好！再快一点，或者换一只手。":"Now try Practice. 现在试试练习。"; return; }
+        loopN++;
+        if(upOn()){ const cap=Math.min(132,song.tempo+12); if(tempo<cap){ tempo=Math.min(cap,tempo+4); setTempoUI(); } }
+        pass(false); lastKey=""; msg.textContent=`Loop ${loopN} 第 ${loopN} 遍 · ${tempo} bpm`;
+        rel=(c.currentTime-run.t0)/run.spb;
+      }
+      if(loopN===1&&mode==="along") msg.textContent=rel<0?`Count-in: ${Math.floor(rel+bpb)+1}`:"Play the lit keys. 弹亮起的键。";
+      const ab=R[0]+rel;
+      const act=rel<0?[]:all.filter(e=>inR(e,R)&&ab>=e.beat&&ab<Math.min(e.beat+e.d,R[1])-0.04);
+      const k2=act.map(e=>e.pi+":"+e.i).join(",");
+      if(k2!==lastKey){ lastKey=k2;
+        kb.mark(mode==="along"?act.filter(mine).flatMap(e=>e.ms):act.flatMap(e=>e.ms),mode==="along"?"target":"play");
+        if(mode==="along") kb.mark(act.filter(e=>!mine(e)).flatMap(e=>e.ms),"play");
+        kb.setFingers(fingersOf(act)); setNow(act,"now"); if(act[0]) scrollTo(act[0]); }
+      run.raf=requestAnimationFrame(tick); };
+    run.raf=requestAnimationFrame(tick);
+  }
+  function practice(){
+    stop(); audio();
+    const R=rng(), chosen=all.filter(e=>mine(e)&&inR(e,R)), others=all.filter(e=>!mine(e)&&inR(e,R));
+    const onsets=[...new Set(chosen.map(e=>e.beat))].sort((a,b)=>a-b);
+    if(!onsets.length){ msg.className="pstat"; msg.textContent="This hand has nothing to play in these bars. Choose other bars or the other hand. 这只手在这几小节没有音。"; return; }
+    let i=0, hit=new Set(), slips=0, round=1;
+    const P={press(m){
+      const evs=chosen.filter(e=>e.beat===onsets[i]), need=new Set(evs.flatMap(e=>e.ms));
+      if(need.has(m)){ hit.add(m); kb.flash(m,"good"); if([...need].every(x=>hit.has(x))) advance(); }
+      else { slips++; kb.flash(m,"bad"); msg.className="pstat bad"; msg.textContent=`That was ${jnText(m,key)}. Look for ${want(evs)}. 找 ${want(evs).replace(/finger/g,"手指")}。`; }
+    }};
+    prac=P;
+    const show=()=>{
+      if(prac!==P) return;
+      if(i>=onsets.length){ endRound(); return; }
+      const evs=chosen.filter(e=>e.beat===onsets[i]); hit=new Set();
+      kb.mark(evs.flatMap(e=>e.ms),"target"); kb.setFingers(fingersOf(evs)); setNow(evs,"tgt"); scrollTo(evs[0]);
+      if(msg.className!=="pstat bad"){ const many=evs.flatMap(e=>e.ms).length>1; msg.className="pstat"; msg.textContent=Mic.on?`Note ${i+1} of ${onsets.length}: play the lit key${many?"s (the app listens for one of them)":""} on your piano. 在钢琴上弹亮起的键。`:`Note ${i+1} of ${onsets.length}: tap the lit key${many?"s together":""}. 点亮起的键。`; }
+    };
+    const advance=()=>{
+      const spb=60/tempo, start=onsets[i], end=onsets[i+1]??R[1], c=audio();
+      if(!Mic.on&&c) others.filter(e=>e.beat>=start&&e.beat<end).forEach(e=>e.ms.forEach(m=>playNote(m,{when:c.currentTime+(e.beat-start)*spb,dur:Math.min(e.d,R[1]-e.beat)*spb*0.94,vel:.55})));
+      i++; msg.className="pstat"; show();
+    };
+    const endRound=()=>{
+      const k=b.song+":"+your, cur=S.learners[ID];
+      if(R[0]===0&&R[1]>=total&&cur){ const old=cur.practice[k]; if(old==null||slips<old) save(ID,{practice:{[k]:slips}}); }
+      if(loopOn()){
+        msg.className="pstat good"; msg.textContent=`Round ${round}: ${slips?slips+" slip"+(slips>1?"s":""):"no slips"}. Again… 第 ${round} 遍完成，再来一遍……`;
+        kb.mark([],"target"); setNow([],"tgt");
+        setTimeout(()=>{ if(prac!==P) return; i=0; slips=0; round++; msg.className="pstat"; show(); },1600);
+        return;
+      }
+      stop(); msg.className="pstat good"; msg.textContent=slips===0?"Played all the way through with no slips! 一个错音都没有！":`Done, with ${slips} slip${slips>1?"s":""}. Go again and try for none. 完成，有 ${slips} 个错音。再来一遍！`;
+    };
+    P.heard=m=>{
+      const evs=chosen.filter(e=>e.beat===onsets[i]), need=evs.flatMap(e=>e.ms);
+      const okm=need.find(x=>x===m||(x%12===m%12&&Math.abs(x-m)===12));
+      if(okm!=null){ kb.flash(okm,"good"); advance(); }
+      else { slips++; kb.flash(m,"bad"); msg.className="pstat bad"; msg.textContent=`Heard ${jnText(m,key)}. Looking for ${want(evs)}.`; }
+    };
+    P.skip=()=>{ chosen.filter(e=>e.beat===onsets[i]).forEach(e=>e.ms.forEach(m=>playNote(m,{dur:.6}))); advance(); };
+    ui(true); show();
+  }
+  DISPOSE.push(micListen(m=>{ if(prac&&prac.heard) prac.heard(m); else if(!run) kb.flash(m,"play"); }));
+  $("[data-listen]",n).onclick=()=>timed("listen");
+  $("[data-along]",n).onclick=()=>timed("along");
+  $("[data-prac]",n).onclick=practice;
+  $("[data-stop]",n).onclick=()=>{stop();msg.className="pstat";msg.textContent="Stopped. 已停止。"};
+  $("[data-skip]",n).onclick=()=>prac&&prac.skip&&prac.skip();
+  const prevBest=Object.entries(S.learners[ID].practice||{}).filter(([k])=>k.startsWith(b.song+":"));
+  if(prevBest.length){ const bs=Math.min(...prevBest.map(([,v])=>v)); msg.textContent+=` Your best run: ${bs===0?"no slips":bs+" slip"+(bs>1?"s":"")}.`; }
+  return n;
+}
+
+/* ---------- song library ---------- */
+const LIB=[
+ {id:"ode",after:"ode1",tags:["other"]},{id:"goinghome",after:"home2",tags:["other"]},
+ {id:"songbie",after:"farewell2",tags:["chinese"]},{id:"molihua",after:"jasmine",tags:["chinese"]},
+ {id:"auld",after:"jasmine",tags:["other"]},{id:"birthday",after:"jasmine",tags:["other"]},{id:"amazing",after:"jasmine",tags:["other"]},
+ {id:"canon",after:"jasmine",tags:["other"]},{id:"furelise",after:"jasmine",tags:["other"]}
+];
+const LIB_FILTERS=[["all","All 全部"],["chinese","Chinese 中国歌曲"],["ready","Ready for me 可以弹了"]];
+let libFilter="all";
+function bestFor(L,id){ const v=Object.entries(L.practice||{}).filter(([k])=>k.startsWith(id+":")).map(([,x])=>x); return v.length?Math.min(...v):null; }
+function showSongs(){
+  currentView="songs";
+  const L=me();
+  const items=LIB.filter(x=>libFilter==="all"||(libFilter==="ready"?isDone(L,x.after):x.tags.includes(libFilter)));
+  app.innerHTML=`<div class="stack"><h1>Song library${zhSpan("曲库")}</h1>
+    <p class="muted" style="margin:0">Every song shows its 简谱 and works with Listen, Play along, Practice and Use my piano. Each says which lesson gets you ready for it, but you can try any of them whenever you like.</p>
+    <div class="seg" id="libF" role="group" aria-label="Filter songs" style="flex-wrap:wrap;align-self:flex-start">${LIB_FILTERS.map(([k,t])=>`<button type="button" data-v="${k}" aria-pressed="${libFilter===k}">${esc(t)}</button>`).join("")}</div>
+    <div class="lessons">${items.map(x=>{ const sg=SONGS[x.id], les=LBYID[x.after], ready=isDone(L,x.after), bb=bestFor(L,x.id);
+      return `<a class="lrow${ready?" done":""}" href="#song-${x.id}"><span class="num">${ready?"✓":"♪"}</span><span><span class="t">${esc(sg.zh)}<span class="tz">${esc(sg.title)}</span></span><span class="s">${esc(sg.note)}</span></span><span class="small muted" style="text-align:right">${bb!=null?`<span class="chip done">${bb===0?"No slips":"Best: "+bb+" slip"+(bb>1?"s":"")}</span>`:`After lesson ${les.idx+1}`}</span></a>`; }).join("")||`<p class="muted">No songs here yet. Finish a few more lessons and they'll appear.</p>`}</div>
+    <p class="small muted" style="margin:0">All melodies are public domain, in simplified arrangements written for this app.</p></div>`;
+  $$("#libF button").forEach(bt=>bt.onclick=()=>{libFilter=bt.dataset.v;showSongs()});
+}
+function showSong(id){
+  currentView="song";
+  const sg=SONGS[id], x=LIB.find(y=>y.id===id), L=me(), les=x?LBYID[x.after]:null;
+  app.innerHTML=`<article class="stack"><div class="stack" style="gap:8px"><a href="#songs" class="small">← Song library 曲库</a>
+    <h1>${esc(sg.zh||sg.title)}${sg.zh?` <span class="zh">${esc(sg.title)}</span>`:""}</h1>
+    <div class="row"><span class="small muted">${esc(sg.note)}</span>${les?`<a class="chip" href="#lesson-${les.id}" style="text-decoration:none">Ready after lesson ${les.idx+1}: ${esc(les.title)}</a>`:""}</div></div>
+    <div id="songHost"></div></article>`;
+  $("#songHost").appendChild(songPlayer({song:id},L));
+}
+
+/* ---------- free piano ---------- */
+function showPlay(){
+  currentView="play";
+  let labels=prefs().labels, met=null;
+  app.innerHTML=`<div class="stack"><h1>Piano${zhSpan("钢琴")}</h1><p class="muted" style="margin:0">Play freely, or switch on the metronome to practise keeping a steady beat. Scroll sideways for more keys.</p>
+    <section class="prac"><div class="row"><div class="seg" id="fpLabels" role="group" aria-label="Key labels">${[["num","简谱"],["letters","C D E"],["none","None 无"]].map(([k,t])=>`<button type="button" data-v="${k}" aria-pressed="${labels===k}">${t}</button>`).join("")}</div>
+      <label class="tempo" for="fpTempo">Metronome 节拍器 <input type="range" id="fpTempo" min="40" max="160" step="4" value="80"><output>80 bpm</output></label><button class="btn" id="fpMet" type="button">Start metronome</button></div>
+      <div id="fpKb"></div></section>
+    ${MIC_OK?`<section class="prac"><div class="ph"><h3>Microphone check 麦克风测试</h3><span class="small muted">Put the iPad on the music stand, then play single keys</span></div>
+      <div class="row"><span class="bignote" id="fpNote">–</span><div class="stack" style="gap:8px"><span class="meter" style="width:200px"><span id="fpLvl"></span></span><span class="small muted" id="fpHint">Turn on the microphone, then play one key at a time. The app shows the note it hears (in 1=C) and lights it on the keyboard above.</span></div></div>
+      <div class="row" id="fpMicRow"></div></section>`:""}</div>`;
+  const kb=makeKeyboard($("#fpKb"),{from:"C2",to:"C7",labels,key:"C",centerOn:"C4"});
+  $$("#fpLabels button").forEach(b=>b.onclick=()=>{labels=b.dataset.v;kb.setLabels(labels);$$("#fpLabels button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+  const tp=$("#fpTempo"); tp.oninput=()=>tp.nextElementSibling.textContent=tp.value+" bpm";
+  const stopMet=()=>{ if(met){clearInterval(met.iv);killBus(met.bus);met=null;$("#fpMet")&&($("#fpMet").textContent="Start metronome")} };
+  $("#fpMet").onclick=()=>{
+    if(met){stopMet();return}
+    const c=audio(); if(!c) return; const bus=newBus(); let next=c.currentTime+0.1, beat=0;
+    met={bus,iv:setInterval(()=>{ const spb=60/(+tp.value); while(next<c.currentTime+0.25){ click(next,beat%4===0,bus); next+=spb; beat++; } },50)};
+    $("#fpMet").textContent="Stop metronome";
+  };
+  DISPOSE.push(stopMet);
+  if(MIC_OK){
+    const hint=$("#fpHint"); const mc=micControls(app,hint,"C"); $("#fpMicRow").appendChild(mc.btn);
+    const lv=()=>{ const x=$("#fpLvl"); if(x) x.style.width=(Mic.level*100)+"%"; if(!Mic.on&&$("#fpNote")) $("#fpNote").textContent="–"; };
+    Mic.ui.add(lv); DISPOSE.push(()=>Mic.ui.delete(lv));
+    DISPOSE.push(micListen(m=>{ $("#fpNote").innerHTML=`${esc(jnText(m,"C"))} <span class="small muted">${esc(noteLabel(m))}</span>`; kb.flash(m,"play"); kb.center(m); }));
+  }
+}
+
+/* ---------- start ---------- */
+S.learners=lsGet("vp.local",{})||{};
+ensureVan();
+route();
+if(Sync.cfg) syncNow();
+
+</script>
+</body>
+</html>
